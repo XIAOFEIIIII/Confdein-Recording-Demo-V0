@@ -15,7 +15,7 @@ const Navigation: React.FC<NavigationProps> = ({ activeTab, setActiveTab, onReco
 
   const navItems = [
     { id: AppTab.JOURNAL, label: 'Today', color: 'bg-stone-800' },
-    { id: AppTab.HEALTH, label: 'Health', color: 'bg-stone-600' },
+    { id: AppTab.HEALTH, label: 'Stress', color: 'bg-stone-600' },
     { id: AppTab.DEVOTIONAL, label: 'Devo', color: 'bg-stone-400' },
   ];
 

@@ -98,10 +98,10 @@ const App: React.FC = () => {
 
   const getTabTitle = () => {
     switch(activeTab) {
-      case AppTab.JOURNAL: return "Today";
-      case AppTab.HEALTH: return "Health";
-      case AppTab.DEVOTIONAL: return "Devo";
-      default: return "Today";
+      case AppTab.JOURNAL: return "Journal";
+      case AppTab.HEALTH: return "Stress";
+      case AppTab.DEVOTIONAL: return "Devo for Your Day";
+      default: return "Journal";
     }
   };
 
@@ -129,7 +129,7 @@ const App: React.FC = () => {
             />
           </div>
           <div>
-            <h1 className="serif text-2xl font-semibold text-stone-900 tracking-tight leading-none">
+            <h1 className="title text-2xl font-semibold text-stone-900 tracking-tight leading-none">
               {getTabTitle()}
             </h1>
           </div>
@@ -147,19 +147,26 @@ const App: React.FC = () => {
       {/* 
         Main Content Area: 
         - flex-1 and overflow-y-auto to enable scrolling
-        - background-attachment: local to move grid with content
+        - Journal tab has notebook background, other tabs have normal background
+        - Journal tab uses overflow-hidden to let JournalTimeline handle scrolling
       */}
       <main 
-        className="flex-1 overflow-y-auto no-scrollbar relative z-10 overscroll-behavior-y-contain"
-        style={{
-          backgroundImage: `
-            linear-gradient(90deg, transparent 52px, #fecaca 52px, #fecaca 53px, transparent 53px),
-            repeating-linear-gradient(white, white 31px, #f0f0f0 31px, #f0f0f0 32px)
-          `,
-          backgroundSize: '100% 100%, 100% 32px',
-          backgroundAttachment: 'local',
-          backgroundPosition: '0 0'
-        }}
+        className={`flex-1 relative z-10 overscroll-behavior-y-contain ${
+          activeTab === AppTab.JOURNAL ? 'overflow-hidden' : 'overflow-y-auto no-scrollbar bg-white'
+        }`}
+        style={
+          activeTab === AppTab.JOURNAL
+            ? {
+                backgroundImage: `
+                  linear-gradient(90deg, transparent 52px, #fecaca 52px, #fecaca 53px, transparent 53px),
+                  repeating-linear-gradient(white, white 31px, #f0f0f0 31px, #f0f0f0 32px)
+                `,
+                backgroundSize: '100% 100%, 100% 32px',
+                backgroundAttachment: 'local',
+                backgroundPosition: '0 0'
+              }
+            : {}
+        }
       >
         {activeTab === AppTab.JOURNAL ? (
           <JournalTimeline entries={entries} />
@@ -191,14 +198,14 @@ const App: React.FC = () => {
                     
                     <div className="space-y-4">
                       <h4 className="text-[10px] font-bold uppercase tracking-widest text-stone-300">The Reflection</h4>
-                      <p className="text-stone-700 leading-relaxed italic text-[18px] handwriting">
+                      <p className="text-stone-700 leading-relaxed italic text-[18px]">
                         {devotional.reflection}
                       </p>
                     </div>
 
                     <div className="space-y-4">
                       <h4 className="text-[10px] font-bold uppercase tracking-widest text-stone-300">A Simple Prayer</h4>
-                      <p className="text-stone-800 leading-relaxed font-medium serif italic text-[20px]">
+                      <p className="text-stone-800 leading-relaxed font-medium italic text-[20px]">
                         {devotional.prayer}
                       </p>
                     </div>

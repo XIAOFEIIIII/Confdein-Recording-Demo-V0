@@ -3,9 +3,20 @@ import { GoogleGenAI, Type } from "@google/genai";
 import { JournalEntry, Devotional } from "../types";
 
 // Fix: Use the correct initialization pattern for GoogleGenAI
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+// Use import.meta.env for Vite, fallback to process.env for compatibility
+const apiKey = import.meta.env.VITE_GEMINI_API_KEY || (typeof process !== 'undefined' && process.env?.GEMINI_API_KEY) || '';
+const ai = apiKey ? new GoogleGenAI({ apiKey }) : null;
 
 export const analyzeJournalEntry = async (text: string): Promise<Partial<JournalEntry>> => {
+  if (!ai) {
+    // Fallback if API key is not configured
+    return { 
+      summary: "Journal recorded.", 
+      keywords: text.split(' ').slice(0, 3), 
+      mood: 'peaceful' 
+    };
+  }
+  
   const response = await ai.models.generateContent({
     model: 'gemini-3-flash-preview',
     contents: `Analyze this voice journal entry. Extract key themes, a 1-sentence summary, keywords, and any prayer requests mentioned (identify names and specific needs). 
@@ -46,13 +57,23 @@ export const analyzeJournalEntry = async (text: string): Promise<Partial<Journal
 };
 
 export const generatePersonalizedDevotional = async (recentEntries: JournalEntry[]): Promise<Devotional> => {
+  if (!ai) {
+    // Fallback if API key is not configured
+    return {
+      verse: "The Lord is my shepherd, I shall not want.",
+      reference: "Psalm 23:1",
+      reflection: "Take a slow breath and remember you are seen and loved. Let today be held in God's steady presence, not in your own striving. Notice one small grace already given, and let gratitude soften the edges of your thoughts. If you feel pressure, release it into His care—again and again. Ask for wisdom for the next right step, and courage to stay gentle. You are not alone in what you carry.",
+      prayer: "God, be near to me today. Steady my heart when I feel rushed or scattered, and teach me to return to You in the small moments. Give me patience in conversations, clarity in decisions, and humility when I am tempted to control. Help me to receive Your grace, and to offer that same grace to others. Guide my steps and keep me anchored in Your peace. Amen."
+    };
+  }
+  
   const context = recentEntries.map(e => e.transcript).join("\n---\n");
   
   const response = await ai.models.generateContent({
     model: 'gemini-3-flash-preview',
     contents: `Based on the following journal entries from the past few days, provide a personalized 'Holy Pause' devotional. 
     Focus on bringing the user back to God's presence. Do not over-analyze their emotions, just provide spiritual framing.
-    Include: 1 relevant Bible verse, a short reflection (3-4 sentences), and a gentle prayer.
+    Include: 1 relevant Bible verse, a longer reflection (6-8 sentences), and a longer gentle prayer (5-7 sentences).
     
     User Context:
     ${context}`,
@@ -79,8 +100,8 @@ export const generatePersonalizedDevotional = async (recentEntries: JournalEntry
     return {
       verse: "The Lord is my shepherd, I shall not want.",
       reference: "Psalm 23:1",
-      reflection: "Take a moment to rest in the quiet assurance that you are seen and loved.",
-      prayer: "God, help me to find my rest in You today."
+      reflection: "Take a slow breath and remember you are seen and loved. Let today be held in God's steady presence, not in your own striving. Notice one small grace already given, and let gratitude soften the edges of your thoughts. If you feel pressure, release it into His care—again and again. Ask for wisdom for the next right step, and courage to stay gentle. You are not alone in what you carry.",
+      prayer: "God, be near to me today. Steady my heart when I feel rushed or scattered, and teach me to return to You in the small moments. Give me patience in conversations, clarity in decisions, and humility when I am tempted to control. Help me to receive Your grace, and to offer that same grace to others. Guide my steps and keep me anchored in Your peace. Amen."
     };
   }
 };

@@ -63,21 +63,19 @@ const StressDashboard: React.FC = () => {
         <div>
           <p className="text-stone-300 text-[9px] font-bold uppercase tracking-widest mb-2">HRV Score</p>
           <div className="flex items-baseline gap-1">
-            <p className="text-3xl font-light text-stone-800">84</p>
+            <p className="text-3xl font-normal text-stone-800">84</p>
             <span className="text-[10px] text-stone-400 font-bold uppercase">ms</span>
           </div>
-          <p className="text-[8px] text-emerald-500 font-bold uppercase tracking-tighter mt-1">+8% Optimal</p>
         </div>
         <div>
           <p className="text-stone-300 text-[9px] font-bold uppercase tracking-widest mb-2">Daily Load</p>
-          <p className="text-2xl font-light text-stone-800 serif">Gentle</p>
-          <p className="text-[8px] text-stone-400 font-bold italic tracking-tighter mt-1">Steady Baseline</p>
+          <p className="text-3xl font-normal text-stone-800">Gentle</p>
         </div>
       </div>
 
       <button className="w-full bg-stone-50 border border-stone-100 text-stone-900 h-16 rounded-2xl text-[10px] font-bold uppercase tracking-[0.3em] flex items-center justify-center gap-3 hover:bg-stone-100 transition-all group">
         <Wind size={16} className="text-stone-400 group-hover:rotate-90 transition-transform duration-1000" />
-        Breathe for 60 seconds
+        Pause for a Minute
       </button>
     </div>
   );
