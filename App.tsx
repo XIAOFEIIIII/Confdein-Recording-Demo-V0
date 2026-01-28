@@ -188,7 +188,7 @@ const App: React.FC = () => {
                 ) : devotional ? (
                   <div className="space-y-12 py-8">
                     <div className="text-left space-y-6">
-                      <p className="serif text-2xl italic leading-relaxed text-stone-800">
+                      <p className="melrose-text text-stone-800">
                         "{devotional.verse}"
                       </p>
                       <p className="text-[10px] font-bold uppercase tracking-[0.4em] text-stone-400">
@@ -198,14 +198,14 @@ const App: React.FC = () => {
                     
                     <div className="space-y-4">
                       <h4 className="text-[10px] font-bold uppercase tracking-widest text-stone-300">The Reflection</h4>
-                      <p className="text-stone-700 leading-relaxed italic text-[18px]">
+                      <p className="melrose-text text-stone-700">
                         {devotional.reflection}
                       </p>
                     </div>
 
                     <div className="space-y-4">
                       <h4 className="text-[10px] font-bold uppercase tracking-widest text-stone-300">A Simple Prayer</h4>
-                      <p className="text-stone-800 leading-relaxed font-medium italic text-[20px]">
+                      <p className="melrose-text text-stone-800">
                         {devotional.prayer}
                       </p>
                     </div>
