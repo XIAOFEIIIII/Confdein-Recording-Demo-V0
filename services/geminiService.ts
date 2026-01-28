@@ -3,20 +3,9 @@ import { GoogleGenAI, Type } from "@google/genai";
 import { JournalEntry, Devotional } from "../types";
 
 // Fix: Use the correct initialization pattern for GoogleGenAI
-// Use import.meta.env for Vite, fallback to process.env for compatibility
-const apiKey = import.meta.env.VITE_GEMINI_API_KEY || (typeof process !== 'undefined' && process.env?.GEMINI_API_KEY) || '';
-const ai = apiKey ? new GoogleGenAI({ apiKey }) : null;
+const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
 export const analyzeJournalEntry = async (text: string): Promise<Partial<JournalEntry>> => {
-  if (!ai) {
-    // Fallback if API key is not configured
-    return { 
-      summary: "Journal recorded.", 
-      keywords: text.split(' ').slice(0, 3), 
-      mood: 'peaceful' 
-    };
-  }
-  
   const response = await ai.models.generateContent({
     model: 'gemini-3-flash-preview',
     contents: `Analyze this voice journal entry. Extract key themes, a 1-sentence summary, keywords, and any prayer requests mentioned (identify names and specific needs). 
@@ -57,16 +46,6 @@ export const analyzeJournalEntry = async (text: string): Promise<Partial<Journal
 };
 
 export const generatePersonalizedDevotional = async (recentEntries: JournalEntry[]): Promise<Devotional> => {
-  if (!ai) {
-    // Fallback if API key is not configured
-    return {
-      verse: "The Lord is my shepherd, I shall not want.",
-      reference: "Psalm 23:1",
-      reflection: "Take a moment to rest in the quiet assurance that you are seen and loved.",
-      prayer: "God, help me to find my rest in You today."
-    };
-  }
-  
   const context = recentEntries.map(e => e.transcript).join("\n---\n");
   
   const response = await ai.models.generateContent({

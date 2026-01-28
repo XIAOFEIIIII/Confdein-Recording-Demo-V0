@@ -1,7 +1,8 @@
+
 import React from 'react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { StressData } from '../types';
-import { Wind, ShieldCheck } from 'lucide-react';
+import { Wind, ShieldCheck, Heart } from 'lucide-react';
 
 const dummyData: StressData[] = [
   { time: '6am', level: 20, hrv: 85 },
@@ -14,63 +15,69 @@ const dummyData: StressData[] = [
 
 const StressDashboard: React.FC = () => {
   return (
-    <div className="space-y-6 py-4">
-      <div className="bg-stone-100/40 p-6 rounded-3xl border border-stone-200/50">
-        <div className="flex justify-between items-start mb-6">
+    <div className="space-y-12 py-4">
+      <div className="space-y-6">
+        <div className="flex justify-between items-start">
           <div>
-            <h3 className="text-stone-400 text-xs font-bold uppercase tracking-widest mb-1">Current State</h3>
-            <p className="text-2xl font-semibold text-stone-900 serif">Holy Pause Recommended</p>
+            <h3 className="text-stone-300 text-[10px] font-bold uppercase tracking-widest mb-1">State of Heart</h3>
+            <p className="text-2xl font-semibold text-stone-800 serif">Quiet Waters</p>
           </div>
-          <div className="w-12 h-12 bg-amber-50/80 rounded-2xl flex items-center justify-center">
-            <ShieldCheck className="text-amber-500" />
+          <div className="w-10 h-10 bg-stone-50 rounded-full flex items-center justify-center border border-stone-100 shadow-sm">
+            <Heart size={18} className="text-rose-300" />
           </div>
         </div>
         
-        <div className="h-48 w-full mt-4">
+        <div className="h-44 w-full">
           <ResponsiveContainer width="100%" height="100%">
             <AreaChart data={dummyData}>
               <defs>
                 <linearGradient id="colorLevel" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#d6d3d1" stopOpacity={0.4}/>
-                  <stop offset="95%" stopColor="#d6d3d1" stopOpacity={0}/>
+                  <stop offset="5%" stopColor="#1c1917" stopOpacity={0.05}/>
+                  <stop offset="95%" stopColor="#1c1917" stopOpacity={0}/>
                 </linearGradient>
               </defs>
               <Tooltip 
-                contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)', backgroundColor: '#fafaf9' }}
+                cursor={{ stroke: '#e7e5e4', strokeWidth: 1 }}
+                contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 8px 16px rgba(0,0,0,0.05)', backgroundColor: 'rgba(255,255,255,0.9)' }}
               />
               <Area 
                 type="monotone" 
                 dataKey="level" 
-                stroke="#78716c" 
-                strokeWidth={1.5}
+                stroke="#1c1917" 
+                strokeWidth={1}
                 fillOpacity={1} 
                 fill="url(#colorLevel)" 
+                animationDuration={1500}
               />
             </AreaChart>
           </ResponsiveContainer>
         </div>
-        <div className="flex justify-between text-[10px] text-stone-400 font-bold uppercase mt-2 tracking-widest">
-          <span>Morning</span>
+        <div className="flex justify-between text-[9px] text-stone-300 font-bold uppercase tracking-widest">
+          <span>Rise</span>
+          <span>Noon</span>
           <span>Now</span>
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
-        <div className="bg-stone-900 p-5 rounded-3xl text-white">
-          <p className="text-stone-400 text-[10px] font-bold uppercase tracking-widest mb-1">HRV Avg</p>
-          <p className="text-3xl font-light">72 <span className="text-xs opacity-50 uppercase tracking-tighter">ms</span></p>
-          <div className="mt-3 text-[9px] text-emerald-400 font-bold uppercase tracking-wider">+12% from yesterday</div>
+      <div className="grid grid-cols-2 gap-8 border-t border-stone-100 pt-8">
+        <div>
+          <p className="text-stone-300 text-[9px] font-bold uppercase tracking-widest mb-2">HRV Score</p>
+          <div className="flex items-baseline gap-1">
+            <p className="text-3xl font-light text-stone-800">84</p>
+            <span className="text-[10px] text-stone-400 font-bold uppercase">ms</span>
+          </div>
+          <p className="text-[8px] text-emerald-500 font-bold uppercase tracking-tighter mt-1">+8% Optimal</p>
         </div>
-        <div className="bg-stone-100/40 p-5 rounded-3xl border border-stone-200/50">
-          <p className="text-stone-400 text-[10px] font-bold uppercase tracking-widest mb-1">Stress Level</p>
-          <p className="text-2xl font-light text-stone-900 serif">Moderate</p>
-          <div className="mt-3 text-[9px] text-stone-400 font-bold italic tracking-wider">Reflecting on "Work"</div>
+        <div>
+          <p className="text-stone-300 text-[9px] font-bold uppercase tracking-widest mb-2">Daily Load</p>
+          <p className="text-2xl font-light text-stone-800 serif">Gentle</p>
+          <p className="text-[8px] text-stone-400 font-bold italic tracking-tighter mt-1">Steady Baseline</p>
         </div>
       </div>
 
-      <button className="w-full bg-stone-50 border border-stone-900 text-stone-900 py-4 rounded-full text-xs font-bold uppercase tracking-[0.2em] flex items-center justify-center gap-2 hover:bg-stone-900 hover:text-white transition-all group">
-        <Wind size={18} className="group-hover:animate-bounce" />
-        Start 1-Min Holy Pause
+      <button className="w-full bg-stone-50 border border-stone-100 text-stone-900 h-16 rounded-2xl text-[10px] font-bold uppercase tracking-[0.3em] flex items-center justify-center gap-3 hover:bg-stone-100 transition-all group">
+        <Wind size={16} className="text-stone-400 group-hover:rotate-90 transition-transform duration-1000" />
+        Breathe for 60 seconds
       </button>
     </div>
   );
