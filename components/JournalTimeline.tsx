@@ -23,7 +23,7 @@ const JournalTimeline: React.FC<JournalTimelineProps> = ({ entries }) => {
 
   if (entries.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center py-32 px-16 text-stone-200">
+      <div className="flex flex-col items-center justify-center py-32 px-10 text-stone-200">
         <Quote size={32} className="opacity-10 mb-6" />
         <p className="handwriting text-xl text-center italic opacity-40">
           The page is waiting for your voice...
@@ -94,6 +94,7 @@ const JournalTimeline: React.FC<JournalTimelineProps> = ({ entries }) => {
         {dayKeys.map((dayKey, dayIndex) => {
           const dayEntries = groupedEntries[dayKey];
           const entryDate = new Date(dayKey);
+          const isTodayPage = isToday(entryDate);
           
           return (
             <div
@@ -106,7 +107,7 @@ const JournalTimeline: React.FC<JournalTimelineProps> = ({ entries }) => {
               }}
             >
               {/* Each day page - scrollable vertically */}
-              <div className="h-full overflow-y-auto no-scrollbar px-16 pb-[160px]" style={{ paddingTop: '0px', marginTop: '0px', height: '100%' }}>
+              <div className="h-full overflow-y-auto no-scrollbar px-10 pb-[160px]" style={{ paddingTop: '0px', marginTop: '0px', height: '100%' }}>
                 {/* Date Header Block: Exactly 64px high */}
                 <div 
                   className="flex items-end"
@@ -117,9 +118,21 @@ const JournalTimeline: React.FC<JournalTimelineProps> = ({ entries }) => {
                     paddingBottom: '2px'
                   }}
                 >
-                  <span className="text-sm font-bold text-stone-700 uppercase tracking-[0.2em]" style={{ lineHeight: '32px' }}>
-                    {format(entryDate, 'MMMM d')}
-                  </span>
+                  <div className="flex items-baseline gap-3" style={{ lineHeight: '32px' }}>
+                    {isTodayPage && (
+                      <span className="text-[10px] font-bold uppercase tracking-[0.35em] text-stone-900 bg-stone-900/5 px-3 py-1 rounded-full">
+                        Today
+                      </span>
+                    )}
+                    <span
+                      className={`uppercase tracking-[0.2em] ${
+                        isTodayPage ? 'text-[15px] font-bold text-stone-900' : 'text-sm font-bold text-stone-700'
+                      }`}
+                      style={{ lineHeight: '32px' }}
+                    >
+                      {format(entryDate, 'MMMM d')}
+                    </span>
+                  </div>
                 </div>
                 
                 {dayEntries.map((entry, entryIndex) => {
@@ -144,7 +157,7 @@ const JournalTimeline: React.FC<JournalTimelineProps> = ({ entries }) => {
                           {format(entry.timestamp, 'HH:mm')}
                         </span>
                         {mood && (
-                          <div className="flex items-center gap-1.5 opacity-40 group-hover:opacity-100 transition-opacity" style={{ lineHeight: '32px' }}>
+                          <div className="flex items-center gap-1.5 opacity-60" style={{ lineHeight: '32px' }}>
                             <span className="text-xs" style={{ lineHeight: '32px' }}>{mood.icon}</span>
                             <span className={`text-[8px] font-bold uppercase tracking-widest ${mood.color}`} style={{ lineHeight: '32px' }}>{entry.mood}</span>
                           </div>

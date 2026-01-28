@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { BookOpen, Activity, Square, Loader2, Mic } from 'lucide-react';
+import { BookOpen, Activity, Square, Loader2, Mic, Moon } from 'lucide-react';
 import { AppTab } from '../types';
 
 interface NavigationProps {
@@ -14,9 +14,9 @@ const Navigation: React.FC<NavigationProps> = ({ activeTab, setActiveTab, onReco
   const [isProcessing, setIsProcessing] = useState(false);
 
   const navItems = [
-    { id: AppTab.JOURNAL, label: 'Today', color: 'bg-stone-800' },
-    { id: AppTab.HEALTH, label: 'Stress', color: 'bg-stone-600' },
-    { id: AppTab.DEVOTIONAL, label: 'Devo', color: 'bg-stone-400' },
+    { id: AppTab.JOURNAL, icon: BookOpen, label: 'Today' },
+    { id: AppTab.HEALTH, icon: Activity, label: 'Stress' },
+    { id: AppTab.DEVOTIONAL, icon: Moon, label: 'Devo' },
   ];
 
   const handleRecordToggle = () => {
@@ -38,74 +38,69 @@ const Navigation: React.FC<NavigationProps> = ({ activeTab, setActiveTab, onReco
   };
 
   return (
-    <>
-      {/* Vertical Index Tabs on the right edge */}
-      <div className="absolute top-24 right-0 flex flex-col gap-0 z-30">
-        {navItems.map((item, idx) => {
-          const isActive = activeTab === item.id;
-          return (
-            <button
-              key={item.id}
-              onClick={() => setActiveTab(item.id)}
-              className={`
-                relative w-10 h-24 flex items-center justify-center transition-all duration-500
-                rounded-l-lg origin-right
-                ${isActive 
-                  ? `${item.color} text-white translate-x-[-4px] shadow-[-8px_0_15px_rgba(0,0,0,0.1)] scale-110 z-10` 
-                  : 'bg-stone-100/80 text-stone-400 hover:text-stone-600 translate-x-0 z-0'
-                }
-              `}
-              style={{ top: `${idx * 4}px` }}
-            >
-              <span 
-                className="text-[9px] font-bold uppercase tracking-[0.3em] whitespace-nowrap -rotate-90 select-none"
-              >
-                {item.label}
-              </span>
-              {/* Tab indicator for the active one */}
-              {isActive && (
-                <div className="absolute right-0 top-0 bottom-0 w-1 bg-white/20" />
-              )}
-            </button>
-          );
-        })}
-      </div>
+    <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50 flex flex-col items-center gap-4">
+      {/* Floating Status Label */}
+      {isRecording && (
+        <div className="bg-[#f6f5f3]/70 backdrop-blur-2xl text-[#4a3a33] px-4 py-2 rounded-2xl text-[9px] font-bold uppercase tracking-widest animate-pulse shadow-sm">
+          Listening...
+        </div>
+      )}
 
-      {/* Record Interaction Integrated onto Page Bottom */}
-      <div className="absolute bottom-10 right-8 z-30 flex items-center gap-3">
-        {isRecording && (
-          <div className="bg-white/80 backdrop-blur-sm text-stone-900 px-4 py-2 rounded-full text-[9px] font-bold uppercase tracking-[0.2em] shadow-sm border border-stone-100 animate-pulse">
-            Listening...
+      {/* Glass tab bar + record button */}
+      <div className="flex items-center gap-2">
+        <nav className="bg-[#f6f5f3]/55 backdrop-blur-3xl rounded-full flex items-center p-1.5 shadow-[0_8px_32px_rgba(74,58,51,0.08)] h-14">
+          <div className="flex items-center h-full">
+            {navItems.map((item) => {
+              const isActive = activeTab === item.id;
+              return (
+                <button
+                  key={item.id}
+                  onClick={() => setActiveTab(item.id)}
+                  className={`flex flex-col items-center justify-center h-full px-5 rounded-full transition-all duration-500 relative ${
+                    isActive ? 'text-[#4a3a33]' : 'text-[#4a3a33]/80 hover:text-[#4a3a33]'
+                  }`}
+                >
+                  {isActive && (
+                    <div className="absolute inset-0 bg-[#f0efed]/90 rounded-full -z-10 shadow-[0_10px_24px_rgba(74,58,51,0.10)]" />
+                  )}
+
+                  {item.icon && <item.icon size={18} strokeWidth={isActive ? 2 : 1.5} />}
+
+                  <span className={`text-[7px] font-bold uppercase tracking-[0.2em] mt-1 transition-opacity ${
+                    isActive ? 'opacity-100' : 'opacity-70'
+                  }`}>
+                    {item.label}
+                  </span>
+                </button>
+              );
+            })}
           </div>
-        )}
-        
+        </nav>
+
         <button
           onClick={handleRecordToggle}
           disabled={isProcessing}
-          className={`
-            h-16 w-16 rounded-full flex items-center justify-center transition-all duration-500 shadow-xl
-            active:scale-90 relative
-            ${isRecording 
-              ? 'bg-red-500 text-white' 
-              : isProcessing 
-                ? 'bg-stone-100 text-stone-300' 
-                : 'bg-stone-900 text-white hover:bg-black'
-            }
-          `}
+          className={`h-14 w-14 rounded-full flex items-center justify-center transition-all duration-300 active:scale-95 bg-[#f6f5f3]/55 backdrop-blur-3xl shadow-[0_8px_32px_rgba(74,58,51,0.08)] ${
+            isRecording
+              ? 'bg-[#4a3a33] text-[#fbfbfa]'
+              : isProcessing
+                ? 'text-[#4a3a33]/35 cursor-not-allowed'
+                : 'text-[#4a3a33] hover:bg-[#f0efed]'
+          }`}
         >
           {isProcessing ? (
-            <Loader2 className="animate-spin" size={24} />
+            <Loader2 className="animate-spin" size={20} />
           ) : isRecording ? (
-            <Square size={22} fill="currentColor" />
+            <Square size={18} fill="currentColor" />
           ) : (
             <>
-              <Mic size={24} strokeWidth={1.5} />
-              <div className="absolute -top-1 -right-1 w-4 h-4 bg-stone-900 border-2 border-white rounded-full" />
+              <Mic size={20} strokeWidth={1.5} />
+              <span className="sr-only">Record</span>
             </>
           )}
         </button>
       </div>
-    </>
+    </div>
   );
 };
 

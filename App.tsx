@@ -106,7 +106,7 @@ const App: React.FC = () => {
   };
 
   return (
-    <div className="fixed inset-0 bg-white selection:bg-stone-900 selection:text-white no-scrollbar overflow-hidden flex flex-col">
+    <div className="fixed inset-0 bg-[#fbfbfa] selection:bg-[#4a3a33] selection:text-[#fbfbfa] no-scrollbar overflow-hidden flex flex-col">
       {/* Subtle Binding Shadow */}
       <div className="absolute top-0 left-0 bottom-0 w-16 bg-gradient-to-r from-stone-900/[0.04] via-stone-900/[0.01] to-transparent pointer-events-none z-30" />
       
@@ -119,9 +119,9 @@ const App: React.FC = () => {
       {/* 
         Fixed Header: Exactly 96px (3 lines of 32px)
       */}
-      <header className="h-[96px] px-16 flex justify-between items-center relative z-20 bg-white flex-shrink-0">
+      <header className="h-[96px] px-10 flex justify-between items-center relative z-20 bg-[#fbfbfa] flex-shrink-0">
         <div className="flex items-center gap-4">
-          <div className="w-10 h-10 rounded-full overflow-hidden bg-white border border-stone-100 shadow-sm flex-shrink-0 flex items-center justify-center p-0.5">
+          <div className="w-10 h-10 -ml-2 rounded-full overflow-hidden bg-white border border-stone-100 shadow-sm flex-shrink-0 flex items-center justify-center p-0.5">
             <img 
               src="https://api.dicebear.com/7.x/notionists/svg?seed=Lulu&backgroundColor=ffffff" 
               alt="Avatar" 
@@ -129,17 +129,17 @@ const App: React.FC = () => {
             />
           </div>
           <div>
-            <h1 className="title text-2xl font-semibold text-stone-900 tracking-tight leading-none">
+            <h1 className="title text-xl font-semibold text-[#4a3a33] tracking-tight leading-none">
               {getTabTitle()}
             </h1>
           </div>
         </div>
         
         <div className="flex gap-1">
-          <button className="p-2 text-stone-300 hover:text-stone-900 transition-colors"><Search size={18} /></button>
-          <button className="p-2 text-stone-300 hover:text-stone-900 relative transition-colors">
+          <button className="p-2 text-[#4a3a33]/35 hover:text-[#4a3a33] transition-colors"><Search size={18} /></button>
+          <button className="p-2 text-[#4a3a33]/35 hover:text-[#4a3a33] relative transition-colors">
             <Bell size={18} />
-            <span className="absolute top-2.5 right-2.5 w-1 h-1 bg-stone-900 rounded-full ring-2 ring-white" />
+            <span className="absolute top-2.5 right-2.5 w-1 h-1 bg-[#4a3a33] rounded-full ring-2 ring-[#fbfbfa]" />
           </button>
         </div>
       </header>
@@ -152,14 +152,14 @@ const App: React.FC = () => {
       */}
       <main 
         className={`flex-1 relative z-10 overscroll-behavior-y-contain ${
-          activeTab === AppTab.JOURNAL ? 'overflow-hidden' : 'overflow-y-auto no-scrollbar bg-white'
+          activeTab === AppTab.JOURNAL ? 'overflow-hidden' : 'overflow-y-auto no-scrollbar bg-[#fbfbfa]'
         }`}
         style={
           activeTab === AppTab.JOURNAL
             ? {
                 backgroundImage: `
-                  linear-gradient(90deg, transparent 52px, #fecaca 52px, #fecaca 53px, transparent 53px),
-                  repeating-linear-gradient(white, white 31px, #f0f0f0 31px, #f0f0f0 32px)
+                  linear-gradient(90deg, transparent 32px, #d8b9b0 32px, #d8b9b0 33px, transparent 33px),
+                  repeating-linear-gradient(#fbfbfa, #fbfbfa 31px, #e9e8e6 31px, #e9e8e6 32px)
                 `,
                 backgroundSize: '100% 100%, 100% 32px',
                 backgroundAttachment: 'local',
@@ -171,7 +171,7 @@ const App: React.FC = () => {
         {activeTab === AppTab.JOURNAL ? (
           <JournalTimeline entries={entries} />
         ) : (
-          <div className="px-16 pt-[32px] pb-32">
+          <div className="px-10 pt-[32px] pb-32 text-[#4a3a33]">
             {activeTab === AppTab.HEALTH && (
               <div className="animate-in fade-in slide-in-from-right-4 duration-500 max-w-2xl">
                 <StressDashboard />
@@ -181,44 +181,44 @@ const App: React.FC = () => {
             {activeTab === AppTab.DEVOTIONAL && (
               <div className="space-y-10 animate-in fade-in slide-in-from-right-4 duration-500 max-w-2xl">
                 {isLoadingDevo ? (
-                  <div className="flex flex-col items-center justify-center py-24 text-stone-200">
-                    <div className="w-6 h-6 border-2 border-stone-200 border-t-stone-900 rounded-full animate-spin mb-6" />
+                  <div className="flex flex-col items-center justify-center py-24 text-[#4a3a33]/40">
+                    <div className="w-6 h-6 border-2 border-[#e7ded4] border-t-[#4a3a33] rounded-full animate-spin mb-6" />
                     <p className="text-[9px] font-bold uppercase tracking-[0.2em] animate-pulse">Consulting the Spirit...</p>
                   </div>
                 ) : devotional ? (
                   <div className="space-y-12 py-8">
                     <div className="text-left space-y-6">
-                      <p className="melrose-text text-stone-800">
+                      <p className="melrose-text text-[#4a3a33]">
                         "{devotional.verse}"
                       </p>
-                      <p className="text-[10px] font-bold uppercase tracking-[0.4em] text-stone-400">
+                      <p className="text-[10px] font-bold uppercase tracking-[0.4em] text-[#4a3a33]/45">
                         — {devotional.reference}
                       </p>
                     </div>
                     
                     <div className="space-y-4">
-                      <h4 className="text-[10px] font-bold uppercase tracking-widest text-stone-300">The Reflection</h4>
-                      <p className="melrose-text text-stone-700">
+                      <h4 className="text-[10px] font-bold uppercase tracking-widest text-[#4a3a33]/35">The Reflection</h4>
+                      <p className="melrose-text text-[#4a3a33]">
                         {devotional.reflection}
                       </p>
                     </div>
 
                     <div className="space-y-4">
-                      <h4 className="text-[10px] font-bold uppercase tracking-widest text-stone-300">A Simple Prayer</h4>
-                      <p className="melrose-text text-stone-800">
+                      <h4 className="text-[10px] font-bold uppercase tracking-widest text-[#4a3a33]/35">A Simple Prayer</h4>
+                      <p className="melrose-text text-[#4a3a33]">
                         {devotional.prayer}
                       </p>
                     </div>
 
                     <button 
                       onClick={loadDevotional}
-                      className="w-full text-stone-300 text-[9px] font-bold uppercase tracking-[0.3em] py-12 hover:text-stone-900 transition-colors border-t border-stone-100"
+                      className="w-full text-[#4a3a33]/45 text-[9px] font-bold uppercase tracking-[0.3em] py-12 hover:text-[#4a3a33] transition-colors border-t border-[#e7ded4]"
                     >
                       Seek a fresh word
                     </button>
                   </div>
                 ) : (
-                  <div className="text-left py-24 text-stone-300 italic font-light handwriting text-xl">
+                  <div className="text-left py-24 text-[#4a3a33]/40 italic font-light text-xl">
                     Record your thoughts to receive a blessing.
                   </div>
                 )}
