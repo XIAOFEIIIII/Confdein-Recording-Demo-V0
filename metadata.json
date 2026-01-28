@@ -1,0 +1,7 @@
+{
+  "name": "Confidein",
+  "description": "A minimalist spiritual journal and stress management app designed for voice-first recording and devotional reflection.",
+  "requestFramePermissions": [
+    "microphone"
+  ]
+}
