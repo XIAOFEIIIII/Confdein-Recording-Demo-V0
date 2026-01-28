@@ -7,9 +7,10 @@ interface NavigationProps {
   activeTab: AppTab;
   setActiveTab: (tab: AppTab) => void;
   onRecordFinish: (transcript: string) => void;
+  onStartRecording?: () => void;
 }
 
-const Navigation: React.FC<NavigationProps> = ({ activeTab, setActiveTab, onRecordFinish }) => {
+const Navigation: React.FC<NavigationProps> = ({ activeTab, setActiveTab, onRecordFinish, onStartRecording }) => {
   const [isRecording, setIsRecording] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
 
@@ -34,6 +35,10 @@ const Navigation: React.FC<NavigationProps> = ({ activeTab, setActiveTab, onReco
       }, 1500);
     } else {
       setIsRecording(true);
+      // Trigger immersive recording interface
+      if (onStartRecording) {
+        onStartRecording();
+      }
     }
   };
 

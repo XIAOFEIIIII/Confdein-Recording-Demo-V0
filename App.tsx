@@ -5,6 +5,7 @@ import JournalTimeline from './components/JournalTimeline';
 import StressDashboard from './components/StressDashboard';
 import Navigation from './components/Navigation';
 import JournalSideTabs, { JournalSubTab } from './components/JournalSideTabs';
+import ImmersiveRecording from './components/ImmersiveRecording';
 import { analyzeJournalEntry, generatePersonalizedDevotional } from './services/geminiService';
 import { Search, Bell } from 'lucide-react';
 import { subDays, startOfHour, subHours } from 'date-fns';
@@ -119,9 +120,12 @@ const App: React.FC = () => {
   const [devotional, setDevotional] = useState<Devotional | null>(null);
   const [isLoadingDevo, setIsLoadingDevo] = useState(false);
   const [verseList, setVerseList] = useState<Array<{ verse: string; reference: string }>>(MOCK_VERSES.slice(0, 3));
+  const [showImmersiveRecording, setShowImmersiveRecording] = useState(false);
+  const [isProcessingRecording, setIsProcessingRecording] = useState(false);
 
   const handleNewRecord = async (transcript: string) => {
     const newId = Math.random().toString(36).substr(2, 9);
+    setIsProcessingRecording(true);
     analyzeJournalEntry(transcript).then(analysis => {
       const newEntry: JournalEntry = {
         id: newId,
@@ -132,7 +136,28 @@ const App: React.FC = () => {
         mood: analysis.mood as any,
       };
       setEntries(prev => [newEntry, ...prev]);
+      setIsProcessingRecording(false);
+      setShowImmersiveRecording(false);
     });
+  };
+
+  const handleStopRecording = () => {
+    setShowImmersiveRecording(false);
+    // Simulate processing and generate transcript
+    setTimeout(() => {
+      const dummyTranscripts = [
+        "Today I felt a bit overwhelmed with work, but then I remembered the prayer meeting last night and felt some peace.",
+        "Walking through the park this morning was beautiful. I realized I've been holding onto a lot of pride lately.",
+        "I'm praying for my sister Sarah, she's going through a hard time at her new job. God, please guide her.",
+        "The sunset tonight reminded me that even endings can be beautiful. I'm learning to trust the process more."
+      ];
+      const randomTranscript = dummyTranscripts[Math.floor(Math.random() * dummyTranscripts.length)];
+      handleNewRecord(randomTranscript);
+    }, 500);
+  };
+
+  const handleCancelRecording = () => {
+    setShowImmersiveRecording(false);
   };
 
   const loadDevotional = useCallback(async () => {
@@ -190,6 +215,7 @@ const App: React.FC = () => {
         activeTab={activeTab} 
         setActiveTab={setActiveTab} 
         onRecordFinish={handleNewRecord}
+        onStartRecording={() => setShowImmersiveRecording(true)}
       />
 
       {/* 
@@ -372,6 +398,14 @@ const App: React.FC = () => {
           </div>
         )}
       </main>
+
+      {/* Immersive Recording Interface */}
+      {showImmersiveRecording && (
+        <ImmersiveRecording
+          onStop={handleStopRecording}
+          onCancel={handleCancelRecording}
+        />
+      )}
     </div>
   );
 };
