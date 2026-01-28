@@ -1,9 +1,10 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { AppTab, JournalEntry, Devotional } from './types';
+import { AppTab, JournalEntry, Devotional, PrayerRequest } from './types';
 import JournalTimeline from './components/JournalTimeline';
 import StressDashboard from './components/StressDashboard';
 import Navigation from './components/Navigation';
+import JournalSideTabs, { JournalSubTab } from './components/JournalSideTabs';
 import { analyzeJournalEntry, generatePersonalizedDevotional } from './services/geminiService';
 import { Search, Bell } from 'lucide-react';
 import { subDays, startOfHour, subHours } from 'date-fns';
@@ -16,7 +17,16 @@ const MOCK_ENTRIES: JournalEntry[] = [
     transcript: "Quiet time this morning was much needed. The sunrise was a gentle reminder that every day is a fresh start. I'm focusing on patience today, especially with the upcoming product launch. God, give me the words to speak with kindness.",
     summary: "Morning reflection on patience and fresh starts.",
     keywords: ["patience", "morning", "kindness"],
-    mood: 'peaceful'
+    mood: 'peaceful',
+    prayerRequests: [
+      {
+        id: 'pr-1',
+        personName: 'Lulu',
+        request: 'Give me patience and kind words for today’s meetings, and help me lead with gentleness instead of urgency.',
+        status: 'active',
+        createdAt: now - 1000 * 60 * 25,
+      },
+    ],
   },
   {
     id: 'entry-2',
@@ -24,7 +34,23 @@ const MOCK_ENTRIES: JournalEntry[] = [
     transcript: "The meeting today was intense. I felt my chest tightening when the timeline was moved up. I took a deep breath and remembered that I don't have to carry this alone. 'My grace is sufficient for you.'",
     summary: "Managing work pressure with spiritual focus.",
     keywords: ["work", "stress", "grace"],
-    mood: 'heavy'
+    mood: 'heavy',
+    prayerRequests: [
+      {
+        id: 'pr-2',
+        personName: 'Mark',
+        request: 'Strengthen Mark under pressure at work—give him clarity, steadiness, and favor with his team.',
+        status: 'active',
+        createdAt: now - 1000 * 60 * 60 * 3,
+      },
+      {
+        id: 'pr-3',
+        personName: 'Team',
+        request: 'Help our team communicate with humility and stay aligned on what matters most.',
+        status: 'active',
+        createdAt: now - 1000 * 60 * 60 * 2,
+      },
+    ],
   },
   {
     id: 'entry-3',
@@ -32,7 +58,16 @@ const MOCK_ENTRIES: JournalEntry[] = [
     transcript: "Had a wonderful dinner with Sarah. We talked about our childhood dreams and how far we've come. It's amazing to see how the dots connect over time. Truly grateful for lifelong friendships that feel like home.",
     summary: "Dinner with Sarah and reflecting on growth.",
     keywords: ["friendship", "gratitude", "growth"],
-    mood: 'grateful'
+    mood: 'grateful',
+    prayerRequests: [
+      {
+        id: 'pr-4',
+        personName: 'Sarah',
+        request: 'Bless Sarah with rest and encouragement this week. Let her feel supported and surrounded by peace.',
+        status: 'active',
+        createdAt: subHours(now, 23).getTime(),
+      },
+    ],
   },
   {
     id: 'entry-4',
@@ -56,15 +91,34 @@ const MOCK_ENTRIES: JournalEntry[] = [
     transcript: "I was a bit short with my mom on the phone today. I feel bad about it now. I need to apologize and be more mindful of her feelings. Patience is easy when things go my way, hard when I'm tired.",
     summary: "Reflecting on a difficult conversation with mom.",
     keywords: ["family", "forgiveness", "patience"],
-    mood: 'heavy'
+    mood: 'heavy',
+    prayerRequests: [
+      {
+        id: 'pr-5',
+        personName: 'Mom',
+        request: 'Help me apologize well, and soften my heart to listen with love. Bring healing and warmth to our relationship.',
+        status: 'active',
+        createdAt: subDays(now, 2).getTime() - 1000 * 60 * 60 * 4,
+      },
+    ],
   }
+];
+
+const MOCK_VERSES: Array<{ verse: string; reference: string }> = [
+  { verse: 'The Lord is my shepherd; I shall not want.', reference: 'Psalm 23:1' },
+  { verse: 'Come to me, all who labor and are heavy laden, and I will give you rest.', reference: 'Matthew 11:28' },
+  { verse: 'Be still, and know that I am God.', reference: 'Psalm 46:10' },
+  { verse: 'My grace is sufficient for you, for my power is made perfect in weakness.', reference: '2 Corinthians 12:9' },
+  { verse: 'Peace I leave with you; my peace I give to you.', reference: 'John 14:27' },
 ];
 
 const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<AppTab>(AppTab.JOURNAL);
+  const [journalSubTab, setJournalSubTab] = useState<JournalSubTab>('journal');
   const [entries, setEntries] = useState<JournalEntry[]>(MOCK_ENTRIES);
   const [devotional, setDevotional] = useState<Devotional | null>(null);
   const [isLoadingDevo, setIsLoadingDevo] = useState(false);
+  const [verseList, setVerseList] = useState<Array<{ verse: string; reference: string }>>(MOCK_VERSES.slice(0, 3));
 
   const handleNewRecord = async (transcript: string) => {
     const newId = Math.random().toString(36).substr(2, 9);
@@ -95,6 +149,28 @@ const App: React.FC = () => {
       loadDevotional();
     }
   }, [activeTab, devotional, loadDevotional]);
+
+  // Note: Verse sub-tab uses a local verse list (no refresh button).
+
+  // When we get a new devotional, prepend its verse into the verse list (dedup by reference+verse)
+  useEffect(() => {
+    if (!devotional) return;
+    const next = { verse: devotional.verse, reference: devotional.reference };
+    setVerseList((prev) => {
+      const key = `${next.reference}::${next.verse}`;
+      const seen = new Set(prev.map((v) => `${v.reference}::${v.verse}`));
+      if (seen.has(key)) return prev;
+      return [next, ...prev].slice(0, 6);
+    });
+  }, [devotional]);
+
+  const allPrayerRequests: PrayerRequest[] = entries
+    .flatMap((e) => e.prayerRequests ?? [])
+    .map((pr, idx) => ({
+      ...pr,
+      // ensure stable-ish ids if backend didn't provide
+      id: pr.id || `pr-${idx}`,
+    }));
 
   const getTabTitle = () => {
     switch(activeTab) {
@@ -152,7 +228,9 @@ const App: React.FC = () => {
       */}
       <main 
         className={`flex-1 relative z-10 overscroll-behavior-y-contain ${
-          activeTab === AppTab.JOURNAL ? 'overflow-hidden' : 'overflow-y-auto no-scrollbar bg-[#fbfbfa]'
+          activeTab === AppTab.JOURNAL && journalSubTab === 'journal'
+            ? 'overflow-hidden'
+            : 'overflow-y-auto no-scrollbar bg-[#fbfbfa]'
         }`}
         style={
           activeTab === AppTab.JOURNAL
@@ -169,7 +247,74 @@ const App: React.FC = () => {
         }
       >
         {activeTab === AppTab.JOURNAL ? (
-          <JournalTimeline entries={entries} />
+          <div className="relative w-full h-full">
+            <JournalSideTabs value={journalSubTab} onChange={setJournalSubTab} />
+
+            {journalSubTab === 'journal' && (
+              <JournalTimeline entries={entries} />
+            )}
+
+            {journalSubTab === 'prayer' && (
+              <div className="px-10 pt-[32px] pb-44 text-[#4a3a33] max-w-2xl">
+                {allPrayerRequests.length === 0 ? (
+                  <div className="text-[#4a3a33]/45 text-sm">
+                    No prayer requests yet. Record a journal entry that includes a prayer request (a name + need).
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {allPrayerRequests.map((pr) => (
+                      <div
+                        key={pr.id}
+                        className="bg-[#f6f5f3]/70 backdrop-blur-sm rounded-2xl p-5 shadow-sm"
+                      >
+                        <div className="text-[10px] font-bold uppercase tracking-[0.25em] text-[#4a3a33]/45">
+                          {pr.personName}
+                        </div>
+                        <div className="text-[#4a3a33] mt-2 leading-relaxed">
+                          {pr.request}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {journalSubTab === 'verse' && (
+              <div className="px-10 pt-[32px] pb-44 text-[#4a3a33] max-w-2xl">
+                <div className="space-y-6">
+                    <div className="flex items-center justify-between">
+                      <button
+                        onClick={() => {
+                          // rotate one mock verse from the pool
+                          setVerseList((prev) => {
+                            const next = MOCK_VERSES[Math.floor(Math.random() * MOCK_VERSES.length)];
+                            const key = `${next.reference}::${next.verse}`;
+                            const seen = new Set(prev.map((v) => `${v.reference}::${v.verse}`));
+                            if (seen.has(key)) return prev;
+                            return [next, ...prev].slice(0, 6);
+                          });
+                        }}
+                        className="text-[10px] font-bold uppercase tracking-[0.25em] text-[#4a3a33]/70 hover:text-[#4a3a33] transition-colors"
+                      >
+                        Add verse
+                      </button>
+                    </div>
+
+                    <div className="space-y-5">
+                      {verseList.map((v, i) => (
+                        <div key={`${v.reference}-${i}`} className="bg-[#f6f5f3]/70 backdrop-blur-sm rounded-2xl p-5 shadow-sm">
+                          <p className="melrose-text text-[#4a3a33]">"{v.verse}"</p>
+                          <p className="text-[10px] font-bold uppercase tracking-[0.4em] text-[#4a3a33]/45 mt-3">
+                            — {v.reference}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                </div>
+              </div>
+            )}
+          </div>
         ) : (
           <div className="px-10 pt-[32px] pb-32 text-[#4a3a33]">
             {activeTab === AppTab.HEALTH && (
