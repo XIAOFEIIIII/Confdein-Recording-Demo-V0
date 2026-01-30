@@ -22,8 +22,8 @@ const STICKY_COLORS: Record<JournalSubTab, { active: string; inactive: string }>
 
 const JournalSideTabs: React.FC<JournalSideTabsProps> = ({ value, onChange }) => {
   return (
-    <div className="absolute top-24 right-0 flex flex-col gap-0 z-40">
-      {ITEMS.map((item, idx) => {
+    <div className="absolute top-24 right-0 flex flex-col gap-0.5 z-40">
+      {ITEMS.map((item) => {
         const isActive = value === item.id;
         const colors = STICKY_COLORS[item.id];
         return (
@@ -31,16 +31,15 @@ const JournalSideTabs: React.FC<JournalSideTabsProps> = ({ value, onChange }) =>
             key={item.id}
             onClick={() => onChange(item.id)}
             className={`
-              relative w-10 h-24 flex items-center justify-center transition-all duration-500
-              rounded-l-lg origin-right shadow-sm
+              relative w-7 flex items-center justify-center transition-all duration-300
+              rounded-l-md shadow-sm
               ${isActive
-                ? `${colors.active} text-[#4a3a33] translate-x-[-4px] shadow-[0_10px_24px_rgba(74,58,51,0.10)] scale-110 z-10`
-                : `${colors.inactive} text-[#4a3a33]/85 hover:text-[#4a3a33] translate-x-0 z-0`
+                ? `h-28 ${colors.active} text-[#4a3a33] shadow-[0_8px_20px_rgba(74,58,51,0.08)] z-10`
+                : `h-20 ${colors.inactive} text-[#4a3a33]/85 hover:text-[#4a3a33] z-0`
               }
             `}
-            style={{ top: `${idx * 4}px` }}
           >
-            <span className="text-[9px] font-bold uppercase tracking-[0.3em] whitespace-nowrap -rotate-90 select-none">
+            <span className="text-[8px] font-bold uppercase tracking-[0.25em] whitespace-nowrap -rotate-90 select-none">
               {item.label}
             </span>
           </button>

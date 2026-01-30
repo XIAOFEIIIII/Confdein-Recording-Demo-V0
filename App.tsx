@@ -7,7 +7,7 @@ import Navigation from './components/Navigation';
 import JournalSideTabs, { JournalSubTab } from './components/JournalSideTabs';
 import ImmersiveRecording from './components/ImmersiveRecording';
 import { analyzeJournalEntry, generatePersonalizedDevotional } from './services/geminiService';
-import { Search, Bell } from 'lucide-react';
+import { Search, Bell, Plus, Trash2 } from 'lucide-react';
 import { subDays, startOfHour, subHours } from 'date-fns';
 
 const now = Date.now();
@@ -120,8 +120,11 @@ const App: React.FC = () => {
   const [devotional, setDevotional] = useState<Devotional | null>(null);
   const [isLoadingDevo, setIsLoadingDevo] = useState(false);
   const [verseList, setVerseList] = useState<Array<{ verse: string; reference: string }>>(MOCK_VERSES.slice(0, 3));
+  const [userPrayerRequests, setUserPrayerRequests] = useState<PrayerRequest[]>([]);
   const [showImmersiveRecording, setShowImmersiveRecording] = useState(false);
   const [isProcessingRecording, setIsProcessingRecording] = useState(false);
+  const [newPrayerName, setNewPrayerName] = useState('');
+  const [newPrayerRequest, setNewPrayerRequest] = useState('');
 
   const handleNewRecord = async (transcript: string) => {
     const newId = Math.random().toString(36).substr(2, 9);
@@ -189,13 +192,44 @@ const App: React.FC = () => {
     });
   }, [devotional]);
 
-  const allPrayerRequests: PrayerRequest[] = entries
+  const allPrayerRequestsFromEntries: PrayerRequest[] = entries
     .flatMap((e) => e.prayerRequests ?? [])
     .map((pr, idx) => ({
       ...pr,
-      // ensure stable-ish ids if backend didn't provide
       id: pr.id || `pr-${idx}`,
     }));
+  const displayedPrayerRequests: PrayerRequest[] = [...userPrayerRequests, ...allPrayerRequestsFromEntries];
+
+  const removePrayerRequest = (pr: PrayerRequest) => {
+    if (pr.id.startsWith('pr-user-')) {
+      setUserPrayerRequests((prev) => prev.filter((p) => p.id !== pr.id));
+    } else {
+      setEntries((prev) =>
+        prev.map((entry) => ({
+          ...entry,
+          prayerRequests: (entry.prayerRequests ?? []).filter((p) => p.id !== pr.id),
+        }))
+      );
+    }
+  };
+
+  const addPrayerRequest = () => {
+    const name = newPrayerName.trim();
+    const request = newPrayerRequest.trim();
+    if (!name || !request) return;
+    setUserPrayerRequests((prev) => [
+      ...prev,
+      {
+        id: `pr-user-${Date.now()}`,
+        personName: name,
+        request,
+        status: 'active',
+        createdAt: Date.now(),
+      },
+    ]);
+    setNewPrayerName('');
+    setNewPrayerRequest('');
+  };
 
   const getTabTitle = () => {
     switch(activeTab) {
@@ -282,23 +316,86 @@ const App: React.FC = () => {
 
             {journalSubTab === 'prayer' && (
               <div className="px-10 pt-[32px] pb-44 text-[#4a3a33] max-w-2xl">
-                {allPrayerRequests.length === 0 ? (
-                  <div className="text-[#4a3a33]/45 text-sm">
-                    No prayer requests yet. Record a journal entry that includes a prayer request (a name + need).
-                  </div>
+                {/* Row 1: Add request label + button — exactly 32px */}
+                <div
+                  className="flex items-center justify-between gap-4"
+                  style={{ height: '32px', lineHeight: '32px', margin: 0, padding: 0 }}
+                >
+                  <span className="text-[10px] font-bold uppercase tracking-[0.25em] text-[#4a3a33]/45" style={{ lineHeight: '32px' }}>
+                    Add request
+                  </span>
+                  <button
+                    type="button"
+                    onClick={addPrayerRequest}
+                    disabled={!newPrayerName.trim() || !newPrayerRequest.trim()}
+                    className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[0.2em] text-[#4a3a33]/70 hover:text-[#4a3a33] disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                    style={{ lineHeight: '32px' }}
+                  >
+                    <Plus size={14} />
+                    Add
+                  </button>
+                </div>
+                {/* Row 2: Name input — exactly 32px */}
+                <input
+                  type="text"
+                  placeholder="Name"
+                  value={newPrayerName}
+                  onChange={(e) => setNewPrayerName(e.target.value)}
+                  className="w-full bg-transparent border-b border-[#e3e1dc] text-[15px] handwriting text-[#4a3a33] placeholder:text-[#4a3a33]/35 focus:outline-none focus:border-[#4a3a33]/40 block"
+                  style={{ height: '32px', lineHeight: '32px', margin: 0, padding: 0 }}
+                />
+                {/* Rows 3–4: Prayer request textarea — 64px (2 grid lines) */}
+                <textarea
+                  placeholder="Prayer request…"
+                  value={newPrayerRequest}
+                  onChange={(e) => setNewPrayerRequest(e.target.value)}
+                  rows={2}
+                  className="w-full bg-transparent border-b border-[#e3e1dc] text-[15px] handwriting text-[#4a3a33] placeholder:text-[#4a3a33]/35 focus:outline-none focus:border-[#4a3a33]/40 resize-none block"
+                  style={{ minHeight: '64px', lineHeight: '32px', margin: 0, padding: 0 }}
+                />
+                {/* Spacer — 32px */}
+                <div style={{ height: '32px' }} />
+
+                {displayedPrayerRequests.length === 0 ? (
+                  <p
+                    className="handwriting text-[#4a3a33]/45 text-[15px]"
+                    style={{ lineHeight: '32px', margin: 0, padding: 0, minHeight: '32px' }}
+                  >
+                    No prayer requests yet. Add one above or record a journal entry that includes a prayer request.
+                  </p>
                 ) : (
-                  <div className="space-y-4">
-                    {allPrayerRequests.map((pr) => (
+                  <div>
+                    {displayedPrayerRequests.map((pr) => (
                       <div
                         key={pr.id}
-                        className="bg-[#f6f5f3]/70 backdrop-blur-sm rounded-2xl p-5 shadow-sm"
+                        className="group flex items-start gap-3"
+                        style={{ marginBottom: '32px' }}
                       >
-                        <div className="text-[10px] font-bold uppercase tracking-[0.25em] text-[#4a3a33]/45">
-                          {pr.personName}
+                        <div className="flex-1 min-w-0">
+                          {/* Person name — exactly 32px row */}
+                          <p
+                            className="handwriting text-[13px] text-[#4a3a33]/45"
+                            style={{ height: '32px', lineHeight: '32px', margin: 0, padding: 0, display: 'block' }}
+                          >
+                            {pr.personName}
+                          </p>
+                          {/* Request — 32px line height, aligns to grid */}
+                          <p
+                            className="handwriting text-[#4a3a33] text-[15px] opacity-90"
+                            style={{ lineHeight: '32px', margin: 0, padding: 0, display: 'block', minHeight: '32px' }}
+                          >
+                            {pr.request}
+                          </p>
                         </div>
-                        <div className="text-[#4a3a33] mt-2 leading-relaxed">
-                          {pr.request}
-                        </div>
+                        <button
+                          type="button"
+                          onClick={() => removePrayerRequest(pr)}
+                          className="flex-shrink-0 p-2 text-[#4a3a33]/35 hover:text-[#4a3a33] hover:bg-[#4a3a33]/5 rounded-full transition-colors opacity-50 group-hover:opacity-100 mt-0"
+                          style={{ marginTop: 0 }}
+                          aria-label="Remove"
+                        >
+                          <Trash2 size={14} />
+                        </button>
                       </div>
                     ))}
                   </div>
@@ -308,35 +405,41 @@ const App: React.FC = () => {
 
             {journalSubTab === 'verse' && (
               <div className="px-10 pt-[32px] pb-44 text-[#4a3a33] max-w-2xl">
-                <div className="space-y-6">
-                    <div className="flex items-center justify-between">
-                      <button
-                        onClick={() => {
-                          // rotate one mock verse from the pool
-                          setVerseList((prev) => {
-                            const next = MOCK_VERSES[Math.floor(Math.random() * MOCK_VERSES.length)];
-                            const key = `${next.reference}::${next.verse}`;
-                            const seen = new Set(prev.map((v) => `${v.reference}::${v.verse}`));
-                            if (seen.has(key)) return prev;
-                            return [next, ...prev].slice(0, 6);
-                          });
-                        }}
-                        className="text-[10px] font-bold uppercase tracking-[0.25em] text-[#4a3a33]/70 hover:text-[#4a3a33] transition-colors"
-                      >
-                        Add verse
-                      </button>
-                    </div>
+                <div className="flex items-center justify-between" style={{ height: '32px', marginBottom: '32px' }}>
+                  <button
+                    onClick={() => {
+                      setVerseList((prev) => {
+                        const next = MOCK_VERSES[Math.floor(Math.random() * MOCK_VERSES.length)];
+                        const key = `${next.reference}::${next.verse}`;
+                        const seen = new Set(prev.map((v) => `${v.reference}::${v.verse}`));
+                        if (seen.has(key)) return prev;
+                        return [next, ...prev].slice(0, 6);
+                      });
+                    }}
+                    className="text-[10px] font-bold uppercase tracking-[0.25em] text-[#4a3a33]/70 hover:text-[#4a3a33] transition-colors"
+                  >
+                    Add verse
+                  </button>
+                </div>
 
-                    <div className="space-y-5">
-                      {verseList.map((v, i) => (
-                        <div key={`${v.reference}-${i}`} className="bg-[#f6f5f3]/70 backdrop-blur-sm rounded-2xl p-5 shadow-sm">
-                          <p className="melrose-text text-[#4a3a33]">"{v.verse}"</p>
-                          <p className="text-[10px] font-bold uppercase tracking-[0.4em] text-[#4a3a33]/45 mt-3">
-                            — {v.reference}
-                          </p>
-                        </div>
-                      ))}
+                <div>
+                  {verseList.map((v, i) => (
+                    <div key={`${v.reference}-${i}`} className="block" style={{ marginBottom: '32px' }}>
+                      <p
+                        className="handwriting text-[#4a3a33] text-[15px] opacity-90"
+                        style={{ lineHeight: '32px', margin: 0, padding: 0, display: 'block', minHeight: '32px' }}
+                      >
+                        "{v.verse}"
+                      </p>
+                      <p
+                        className="handwriting text-[#4a3a33]/45 text-[13px]"
+                        style={{ lineHeight: '32px', margin: 0, padding: 0, display: 'block', minHeight: '32px' }}
+                      >
+                        — {v.reference}
+                      </p>
+                      <div style={{ height: '32px' }} />
                     </div>
+                  ))}
                 </div>
               </div>
             )}

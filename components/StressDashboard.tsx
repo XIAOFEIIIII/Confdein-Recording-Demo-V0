@@ -2,7 +2,17 @@
 import React from 'react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { StressData } from '../types';
-import { Wind, ShieldCheck, Heart } from 'lucide-react';
+import { Wind, ShieldCheck, Heart, BookOpen } from 'lucide-react';
+
+const STRESSED_THRESHOLD = 55; // level >= this is "Stressed" band
+
+const STRESS_COMFORT_VERSES: Array<{ verse: string; reference: string }> = [
+  { verse: 'Come to me, all who labor and are heavy laden, and I will give you rest.', reference: 'Matthew 11:28' },
+  { verse: 'Be still, and know that I am God.', reference: 'Psalm 46:10' },
+  { verse: 'My grace is sufficient for you, for my power is made perfect in weakness.', reference: '2 Corinthians 12:9' },
+  { verse: 'Peace I leave with you; my peace I give to you. Not as the world gives do I give to you. Let not your hearts be troubled.', reference: 'John 14:27' },
+  { verse: 'The Lord is near to the brokenhearted and saves the crushed in spirit.', reference: 'Psalm 34:18' },
+];
 
 const dummyData: StressData[] = [
   { time: '6am', level: 20, hrv: 85 },
@@ -13,7 +23,17 @@ const dummyData: StressData[] = [
   { time: '9pm', level: 15, hrv: 90 },
 ];
 
+// Pick one verse by day so it's stable for the day
+const getRecommendedVerse = () => {
+  const dayIndex = Math.floor(Date.now() / (1000 * 60 * 60 * 24)) % STRESS_COMFORT_VERSES.length;
+  return STRESS_COMFORT_VERSES[dayIndex];
+};
+
 const StressDashboard: React.FC = () => {
+  const maxLevel = Math.max(...dummyData.map((d) => d.level));
+  const isStressed = maxLevel >= STRESSED_THRESHOLD;
+  const recommendedVerse = getRecommendedVerse();
+
   return (
     <div className="space-y-12 py-4">
       <div className="space-y-6">
@@ -72,6 +92,21 @@ const StressDashboard: React.FC = () => {
           <p className="text-3xl font-normal text-[#4a3a33]">Gentle</p>
         </div>
       </div>
+
+      {isStressed && (
+        <div className="border-t border-[#e3e1dc] pt-8">
+          <div className="flex items-center gap-2 mb-3">
+            <BookOpen size={14} className="text-[#4a3a33]/45" />
+            <p className="text-[#4a3a33]/45 text-[9px] font-bold uppercase tracking-widest">When you’re stressed</p>
+          </div>
+          <div className="bg-[#f6f5f3]/70 backdrop-blur-sm rounded-2xl p-5 shadow-sm">
+            <p className="melrose-text text-[#4a3a33]">"{recommendedVerse.verse}"</p>
+            <p className="text-[10px] font-bold uppercase tracking-[0.4em] text-[#4a3a33]/45 mt-3">
+              — {recommendedVerse.reference}
+            </p>
+          </div>
+        </div>
+      )}
 
       <button className="w-full bg-[#f6f5f3] border border-[#e3e1dc] text-[#4a3a33] h-16 rounded-2xl text-[10px] font-bold uppercase tracking-[0.3em] flex items-center justify-center gap-3 hover:bg-[#f0efed] transition-all group">
         <Wind size={16} className="text-[#4a3a33]/45 group-hover:rotate-90 transition-transform duration-1000" />
