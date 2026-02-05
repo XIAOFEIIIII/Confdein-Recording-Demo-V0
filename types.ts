@@ -9,6 +9,8 @@ export interface JournalEntry {
   keywords: string[];
   mood?: Mood;
   prayerRequests?: PrayerRequest[];
+  /** Scripture reference (e.g. Lev 19:32) matched to the entry theme */
+  scripture?: string;
 }
 
 export interface PrayerRequest {
@@ -30,6 +32,8 @@ export interface Devotional {
   reference: string;
   reflection: string;
   prayer: string;
+  quote?: string;
+  sections?: Array<{ title: string; content: string }>;
 }
 
 export enum AppTab {

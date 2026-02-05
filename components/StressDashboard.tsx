@@ -1,8 +1,11 @@
-
-import React from 'react';
+import React, { useState } from 'react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { StressData } from '../types';
-import { Wind, ShieldCheck, Heart, BookOpen } from 'lucide-react';
+import { Wind, BookOpen, ChevronLeft, ChevronRight } from 'lucide-react';
+
+interface StressDashboardProps {
+  onStartMeditation: () => void;
+}
 
 const STRESSED_THRESHOLD = 55; // level >= this is "Stressed" band
 
@@ -23,28 +26,29 @@ const dummyData: StressData[] = [
   { time: '9pm', level: 15, hrv: 90 },
 ];
 
-// Pick one verse by day so it's stable for the day
-const getRecommendedVerse = () => {
-  const dayIndex = Math.floor(Date.now() / (1000 * 60 * 60 * 24)) % STRESS_COMFORT_VERSES.length;
-  return STRESS_COMFORT_VERSES[dayIndex];
+const getInitialVerseIndex = () => {
+  return Math.floor(Date.now() / (1000 * 60 * 60 * 24)) % STRESS_COMFORT_VERSES.length;
 };
 
-const StressDashboard: React.FC = () => {
+const StressDashboard: React.FC<StressDashboardProps> = ({ onStartMeditation }) => {
   const maxLevel = Math.max(...dummyData.map((d) => d.level));
   const isStressed = maxLevel >= STRESSED_THRESHOLD;
-  const recommendedVerse = getRecommendedVerse();
+  const [verseIndex, setVerseIndex] = useState(getInitialVerseIndex);
+  const recommendedVerse = STRESS_COMFORT_VERSES[verseIndex];
+
+  const goPrevVerse = () => {
+    setVerseIndex((i) => (i - 1 + STRESS_COMFORT_VERSES.length) % STRESS_COMFORT_VERSES.length);
+  };
+  const goNextVerse = () => {
+    setVerseIndex((i) => (i + 1) % STRESS_COMFORT_VERSES.length);
+  };
 
   return (
     <div className="space-y-12 py-4">
       <div className="space-y-6">
-        <div className="flex justify-between items-start">
-          <div>
-            <h3 className="text-[#4a3a33]/45 text-[10px] font-bold uppercase tracking-widest mb-1">State of Heart</h3>
-            <p className="text-2xl font-semibold text-[#4a3a33]">Quiet Waters</p>
-          </div>
-          <div className="w-10 h-10 bg-[#f6f5f3] rounded-full flex items-center justify-center border border-[#e3e1dc] shadow-sm">
-            <Heart size={18} className="text-rose-300" />
-          </div>
+        <div>
+          <h3 className="text-[#4a3a33]/45 text-[10px] font-bold uppercase tracking-widest mb-1">State of Heart</h3>
+          <p className="text-2xl font-semibold text-[#4a3a33]">Quiet Waters</p>
         </div>
         
         <div className="h-44 w-full">
@@ -95,20 +99,44 @@ const StressDashboard: React.FC = () => {
 
       {isStressed && (
         <div className="border-t border-[#e3e1dc] pt-8">
-          <div className="flex items-center gap-2 mb-3">
-            <BookOpen size={14} className="text-[#4a3a33]/45" />
-            <p className="text-[#4a3a33]/45 text-[9px] font-bold uppercase tracking-widest">When you’re stressed</p>
+          <div className="flex items-center justify-between gap-2 mb-3">
+            <div className="flex items-center gap-2">
+              <BookOpen size={14} className="text-[#4a3a33]/45" />
+              <p className="text-[#4a3a33]/45 text-[9px] font-bold uppercase tracking-widest">When you’re stressed</p>
+            </div>
+            <div className="flex items-center gap-0.5">
+              <button
+                type="button"
+                onClick={goPrevVerse}
+                className="p-2 text-[#4a3a33]/45 hover:text-[#4a3a33] hover:bg-[#4a3a33]/5 rounded-full transition-colors"
+                aria-label="Previous verse"
+              >
+                <ChevronLeft size={16} />
+              </button>
+              <button
+                type="button"
+                onClick={goNextVerse}
+                className="p-2 text-[#4a3a33]/45 hover:text-[#4a3a33] hover:bg-[#4a3a33]/5 rounded-full transition-colors"
+                aria-label="Next verse"
+              >
+                <ChevronRight size={16} />
+              </button>
+            </div>
           </div>
-          <div className="bg-[#f6f5f3]/70 backdrop-blur-sm rounded-2xl p-5 shadow-sm">
-            <p className="melrose-text text-[#4a3a33]">"{recommendedVerse.verse}"</p>
-            <p className="text-[10px] font-bold uppercase tracking-[0.4em] text-[#4a3a33]/45 mt-3">
+          <div className="bg-[#f6f5f3]/70 backdrop-blur-sm rounded-2xl p-5 shadow-sm h-[144px] flex flex-col overflow-hidden">
+            <p className="melrose-text text-[#4a3a33] overflow-y-auto flex-1 min-h-0">"{recommendedVerse.verse}"</p>
+            <p className="text-[10px] font-bold uppercase tracking-[0.4em] text-[#4a3a33]/45 mt-3 flex-shrink-0">
               — {recommendedVerse.reference}
             </p>
           </div>
         </div>
       )}
 
-      <button className="w-full bg-[#f6f5f3] border border-[#e3e1dc] text-[#4a3a33] h-16 rounded-2xl text-[10px] font-bold uppercase tracking-[0.3em] flex items-center justify-center gap-3 hover:bg-[#f0efed] transition-all group">
+      <button
+        type="button"
+        onClick={onStartMeditation}
+        className="w-full bg-[#f6f5f3] border border-[#e3e1dc] text-[#4a3a33] h-16 rounded-2xl text-[10px] font-bold uppercase tracking-[0.3em] flex items-center justify-center gap-3 hover:bg-[#f0efed] transition-all group"
+      >
         <Wind size={16} className="text-[#4a3a33]/45 group-hover:rotate-90 transition-transform duration-1000" />
         Pause for a Minute
       </button>

@@ -1,20 +1,12 @@
 
 import React, { useState, useEffect, useRef } from 'react';
-import { JournalEntry, Mood } from '../types';
+import { JournalEntry } from '../types';
 import { format, startOfDay, isToday } from 'date-fns';
 import { Quote } from 'lucide-react';
 
 interface JournalTimelineProps {
   entries: JournalEntry[];
 }
-
-const MOOD_CONFIG: Record<Mood, { icon: string; color: string }> = {
-  peaceful: { icon: '🕊️', color: 'text-sky-600' },
-  anxious: { icon: '😟', color: 'text-orange-600' },
-  grateful: { icon: '🌿', color: 'text-emerald-600' },
-  heavy: { icon: '☁️', color: 'text-stone-500' },
-  hopeful: { icon: '✨', color: 'text-rose-600' },
-};
 
 const JournalTimeline: React.FC<JournalTimelineProps> = ({ entries }) => {
   const [currentPageIndex, setCurrentPageIndex] = useState(0);
@@ -106,8 +98,22 @@ const JournalTimeline: React.FC<JournalTimelineProps> = ({ entries }) => {
                 height: '100%'
               }}
             >
-              {/* Each day page - scrollable vertically */}
-              <div className="h-full overflow-y-auto no-scrollbar px-10 pb-[160px]" style={{ paddingTop: '0px', marginTop: '0px', height: '100%' }}>
+              {/* Each day page - scrollable vertically; grid on this element so it scrolls with content */}
+              <div
+                className="h-full overflow-y-auto no-scrollbar px-10 pb-[160px]"
+                style={{
+                  paddingTop: '0px',
+                  marginTop: '0px',
+                  height: '100%',
+                  backgroundImage: `
+                    linear-gradient(90deg, transparent 32px, #d8b9b0 32px, #d8b9b0 33px, transparent 33px),
+                    repeating-linear-gradient(#fbfbfa, #fbfbfa 31px, #e9e8e6 31px, #e9e8e6 32px)
+                  `,
+                  backgroundSize: '100% 100%, 100% 32px',
+                  backgroundAttachment: 'local',
+                  backgroundPosition: '0 0'
+                }}
+              >
                 {/* Date Header Block: Exactly 64px high */}
                 <div 
                   className="flex items-end"
@@ -118,12 +124,7 @@ const JournalTimeline: React.FC<JournalTimelineProps> = ({ entries }) => {
                     paddingBottom: '2px'
                   }}
                 >
-                  <div className="flex items-baseline gap-3" style={{ lineHeight: '32px' }}>
-                    {isTodayPage && (
-                      <span className="text-[10px] font-bold uppercase tracking-[0.35em] text-stone-900 bg-stone-900/5 px-3 py-1 rounded-full">
-                        Today
-                      </span>
-                    )}
+                  <div className="flex items-baseline" style={{ lineHeight: '32px' }}>
                     <span
                       className={`uppercase tracking-[0.2em] ${
                         isTodayPage ? 'text-[15px] font-bold text-stone-900' : 'text-sm font-bold text-stone-700'
@@ -135,17 +136,14 @@ const JournalTimeline: React.FC<JournalTimelineProps> = ({ entries }) => {
                   </div>
                 </div>
                 
-                {dayEntries.map((entry, entryIndex) => {
-                  const mood = entry.mood ? MOOD_CONFIG[entry.mood] : null;
-                  
-                  return (
+                {dayEntries.map((entry) => (
                     <div 
                       key={entry.id} 
                       className="relative group animate-in fade-in duration-700"
                     >
-                      {/* Time/Mood Header: Exactly 32px high, aligned to grid */}
+                      {/* Time Header: Exactly 32px high, aligned to grid */}
                       <div 
-                        className="flex items-center gap-4 select-none"
+                        className="flex items-center select-none"
                         style={{ 
                           height: '32px',
                           lineHeight: '32px',
@@ -153,18 +151,12 @@ const JournalTimeline: React.FC<JournalTimelineProps> = ({ entries }) => {
                           padding: 0
                         }}
                       >
-                         <span className="text-[9px] font-bold text-stone-200 tracking-widest uppercase" style={{ lineHeight: '32px' }}>
+                        <span className="text-[12px] font-bold text-stone-200 tracking-widest uppercase" style={{ lineHeight: '32px' }}>
                           {format(entry.timestamp, 'HH:mm')}
                         </span>
-                        {mood && (
-                          <div className="flex items-center gap-1.5 opacity-60" style={{ lineHeight: '32px' }}>
-                            <span className="text-xs" style={{ lineHeight: '32px' }}>{mood.icon}</span>
-                            <span className={`text-[8px] font-bold uppercase tracking-widest ${mood.color}`} style={{ lineHeight: '32px' }}>{entry.mood}</span>
-                          </div>
-                        )}
                       </div>
                       
-                      {/* Handwriting Content Area */}
+                      {/* Handwriting Content Area: title, then scripture line, then body */}
                       <div 
                         className="block"
                         style={{ 
@@ -176,34 +168,78 @@ const JournalTimeline: React.FC<JournalTimelineProps> = ({ entries }) => {
                           alignItems: 'flex-start'
                         }}
                       >
-                        <p 
-                          className="handwriting text-stone-800 text-[15px] opacity-90 select-none"
-                          style={{
-                            lineHeight: '32px',
-                            margin: 0,
-                            padding: 0,
-                            display: 'block',
-                            height: 'auto',
-                            minHeight: '32px'
-                          }}
-                        >
-                          {entry.transcript}
-                        </p>
+                        {(() => {
+                          const idx = entry.transcript.indexOf('\n\n');
+                          const title = idx >= 0 ? entry.transcript.slice(0, idx) : entry.transcript;
+                          const body = idx >= 0 ? entry.transcript.slice(idx + 2) : '';
+                          return (
+                            <>
+                              <p 
+                                className="handwriting text-stone-800 text-[15px] opacity-90 select-none whitespace-pre-line journal-transcript"
+                                style={{
+                                  lineHeight: '32px',
+                                  margin: 0,
+                                  padding: 0,
+                                  display: 'block',
+                                  height: 'auto',
+                                  minHeight: '32px'
+                                }}
+                              >
+                                {title}
+                              </p>
+                              {entry.scripture && (
+                                <p 
+                                  className="handwriting text-stone-800 text-[13px] opacity-90 select-none"
+                                  style={{
+                                    lineHeight: '32px',
+                                    margin: 0,
+                                    padding: 0,
+                                    display: 'block',
+                                    minHeight: '32px'
+                                  }}
+                                >
+                                  {entry.scripture}
+                                </p>
+                              )}
+                              {body && (
+                                <p 
+                                  className="handwriting text-stone-800 text-[15px] opacity-90 select-none whitespace-pre-line"
+                                  style={{
+                                    lineHeight: '32px',
+                                    margin: 0,
+                                    padding: 0,
+                                    display: 'block',
+                                    height: 'auto',
+                                    minHeight: '32px'
+                                  }}
+                                >
+                                  {body}
+                                </p>
+                              )}
+                            </>
+                          );
+                        })()}
                       </div>
 
-                      {/* Metadata Footer: Exactly 32px high */}
+                      {/* Spacer: 32px gap between content and keywords */}
+                      <div style={{ height: '32px' }} />
+
+                      {/* Metadata Footer: keywords only, each row 32px so wrap aligns to grid */}
                       <div 
-                        className="flex items-center gap-3"
+                        className="flex flex-wrap items-stretch gap-x-3 gap-y-0"
                         style={{ 
-                          height: '32px',
-                          lineHeight: '32px',
+                          minHeight: '32px',
                           margin: 0,
                           padding: 0
                         }}
                       >
                         {entry.keywords && entry.keywords.map((kw, i) => (
-                          <span key={i} className="text-[8px] font-bold uppercase tracking-widest text-stone-300" style={{ lineHeight: '32px' }}>
-                            #{kw}
+                          <span
+                            key={i}
+                            className="text-[12px] text-stone-500 inline-flex items-center px-2 py-1 rounded-full bg-stone-200/60"
+                            style={{ height: '32px', lineHeight: '32px' }}
+                          >
+                            #{kw.toLowerCase()}
                           </span>
                         ))}
                       </div>
@@ -211,8 +247,7 @@ const JournalTimeline: React.FC<JournalTimelineProps> = ({ entries }) => {
                       {/* Entry Spacer: Exactly 32px high (1 row) */}
                       <div style={{ height: '32px', margin: 0, padding: 0 }} />
                     </div>
-                  );
-                })}
+                ))}
               </div>
             </div>
           );
