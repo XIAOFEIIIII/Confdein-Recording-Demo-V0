@@ -1,9 +1,11 @@
-import React, { useState } from 'react';
-import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import React, { useState, useMemo } from 'react';
+import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 import { StressData } from '../types';
 import { Wind, BookOpen, ChevronLeft, ChevronRight } from 'lucide-react';
 
 interface StressDashboardProps {
+  /** Date key (yyyy-MM-dd) for the curve; when user selects a day in the week, this changes. */
+  selectedDateKey?: string;
   onStartMeditation: () => void;
 }
 
@@ -17,21 +19,75 @@ const STRESS_COMFORT_VERSES: Array<{ verse: string; reference: string }> = [
   { verse: 'The Lord is near to the brokenhearted and saves the crushed in spirit.', reference: 'Psalm 34:18' },
 ];
 
-const dummyData: StressData[] = [
-  { time: '6am', level: 20, hrv: 85 },
-  { time: '9am', level: 45, hrv: 70 },
-  { time: '12pm', level: 65, hrv: 55 },
-  { time: '3pm', level: 55, hrv: 62 },
-  { time: '6pm', level: 30, hrv: 78 },
-  { time: '9pm', level: 15, hrv: 90 },
-];
+/** Date key (yyyy-MM-dd) -> several distinct 0..1 seeds so adjacent dates look very different */
+function dateSeeds(dateKey: string): [number, number, number, number] {
+  const parts = dateKey.split('-').map(Number);
+  const y = parts[0] ?? 2026;
+  const m = parts[1] ?? 1;
+  const d = parts[2] ?? 1;
+  const n = y * 372 + m * 31 + d;
+  const mix = (a: number, b: number) => ((a * 7919 + b * 7907) % 10007) / 10007;
+  return [
+    mix(n, 1),
+    mix(n, 2),
+    mix(n, 3),
+    mix(n, 4),
+  ];
+}
+
+/** Gaussian bump for smooth curves */
+const bump = (t: number, center: number, width: number, height: number) =>
+  height * Math.exp(-Math.pow((t - center) / width, 2));
+
+/** Generate daily stress curve: shape and level vary clearly by date (different peak times, dip depth, pattern type). */
+function getDailyCurveData(dateKey: string): StressData[] {
+  const [s0, s1, s2, s3] = dateSeeds(dateKey);
+  const times = [6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21];
+
+  // Pick a distinct pattern type so curves don't all look the same
+  const pattern = Math.floor(s0 * 4) % 4; // 0..3
+  const morningPeak = 0.2 + s1 * 0.35;   // when morning hump happens
+  const afternoonPeak = 0.45 + s2 * 0.35; // when afternoon hump happens
+  const peakHeight = 28 + s3 * 24;        // 28..52
+  const dipDepth = 12 + s0 * 22;           // 12..34
+  const baseLevel = 18 + (s1 - 0.5) * 12; // overall shift
+
+  return times.map((h) => {
+    const t = (h - 6) / 15; // 0 at 6am, 1 at 9pm
+    let level: number;
+    if (pattern === 0) {
+      // Early peak, then gentle decline
+      level = baseLevel + bump(t, morningPeak, 0.2, peakHeight) + 15 * (1 - t) * (1 - t);
+    } else if (pattern === 1) {
+      // Afternoon peak, low morning
+      level = baseLevel + bump(t, afternoonPeak, 0.25, peakHeight) + 8 * Math.exp(-Math.pow((t - 0.15) / 0.2, 2));
+    } else if (pattern === 2) {
+      // Midday dip (calm lunch), rise again then evening drop
+      const midday = dipDepth * Math.sin(Math.PI * t);
+      level = baseLevel + bump(t, 0.2, 0.18, 20) + bump(t, 0.7, 0.2, 18) - midday;
+    } else {
+      // Double hump: morning and afternoon
+      level = baseLevel + bump(t, morningPeak, 0.2, peakHeight * 0.7) + bump(t, afternoonPeak, 0.22, peakHeight * 0.8);
+    }
+    level = Math.max(10, Math.min(68, level));
+    const hrv = Math.round(92 - level * 0.9 + Math.sin(t * Math.PI) * 4);
+    const timeLabel = h === 12 ? '12pm' : h < 12 ? `${h}am` : `${h - 12}pm`;
+    return { time: timeLabel, level: Math.round(level * 10) / 10, hrv: Math.max(42, Math.min(92, hrv)) };
+  });
+}
 
 const getInitialVerseIndex = () => {
   return Math.floor(Date.now() / (1000 * 60 * 60 * 24)) % STRESS_COMFORT_VERSES.length;
 };
 
-const StressDashboard: React.FC<StressDashboardProps> = ({ onStartMeditation }) => {
-  const maxLevel = Math.max(...dummyData.map((d) => d.level));
+const StressDashboard: React.FC<StressDashboardProps> = ({ selectedDateKey, onStartMeditation }) => {
+  const dateKey = useMemo(() => {
+    if (selectedDateKey) return selectedDateKey;
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  }, [selectedDateKey]);
+  const chartData = useMemo(() => getDailyCurveData(dateKey), [dateKey]);
+  const maxLevel = Math.max(...chartData.map((d) => d.level));
   const isStressed = maxLevel >= STRESSED_THRESHOLD;
   const [verseIndex, setVerseIndex] = useState(getInitialVerseIndex);
   const recommendedVerse = STRESS_COMFORT_VERSES[verseIndex];
@@ -44,16 +100,16 @@ const StressDashboard: React.FC<StressDashboardProps> = ({ onStartMeditation }) 
   };
 
   return (
-    <div className="space-y-12 py-4">
-      <div className="space-y-6">
+    <div className="py-4 flex flex-col gap-6">
+      <div className="space-y-4">
         <div>
           <h3 className="text-[#4a3a33]/45 text-[10px] font-bold uppercase tracking-widest mb-1">State of Heart</h3>
           <p className="text-2xl font-semibold text-[#4a3a33]">Quiet Waters</p>
         </div>
         
-        <div className="h-44 w-full">
-          <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={dummyData}>
+        <div className="h-36 w-full">
+          <ResponsiveContainer width="100%" height="100%" key={dateKey}>
+            <AreaChart data={chartData}>
               <defs>
                 <linearGradient id="colorLevel" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="5%" stopColor="#4a3a33" stopOpacity={0.07}/>
@@ -83,7 +139,7 @@ const StressDashboard: React.FC<StressDashboardProps> = ({ onStartMeditation }) 
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-8 border-t border-[#e3e1dc] pt-8">
+      <div className="grid grid-cols-2 gap-6 border-t border-[#e3e1dc] pt-6">
         <div>
           <p className="text-[#4a3a33]/45 text-[9px] font-bold uppercase tracking-widest mb-2">HRV Score</p>
           <div className="flex items-baseline gap-1">
@@ -98,8 +154,8 @@ const StressDashboard: React.FC<StressDashboardProps> = ({ onStartMeditation }) 
       </div>
 
       {isStressed && (
-        <div className="border-t border-[#e3e1dc] pt-8">
-          <div className="flex items-center justify-between gap-2 mb-3">
+        <div className="border-t border-[#e3e1dc] pt-6">
+          <div className="flex items-center justify-between gap-2 mb-2">
             <div className="flex items-center gap-2">
               <BookOpen size={14} className="text-[#4a3a33]/45" />
               <p className="text-[#4a3a33]/45 text-[9px] font-bold uppercase tracking-widest">When you’re stressed</p>
@@ -123,9 +179,9 @@ const StressDashboard: React.FC<StressDashboardProps> = ({ onStartMeditation }) 
               </button>
             </div>
           </div>
-          <div className="bg-[#f6f5f3]/50 rounded-2xl p-5 shadow-sm h-[144px] flex flex-col overflow-hidden">
+          <div className="bg-[#f6f5f3]/50 rounded-2xl p-4 shadow-sm h-[120px] flex flex-col overflow-hidden">
             <p className="melrose-text text-[#4a3a33] overflow-y-auto flex-1 min-h-0">"{recommendedVerse.verse}"</p>
-            <p className="text-[10px] font-bold uppercase tracking-[0.4em] text-[#4a3a33]/45 mt-3 flex-shrink-0">
+            <p className="text-[10px] font-bold uppercase tracking-[0.4em] text-[#4a3a33]/45 mt-2 flex-shrink-0">
               — {recommendedVerse.reference}
             </p>
           </div>
@@ -135,7 +191,7 @@ const StressDashboard: React.FC<StressDashboardProps> = ({ onStartMeditation }) 
       <button
         type="button"
         onClick={onStartMeditation}
-        className="w-full bg-[#f6f5f3]/50 text-[#4a3a33] h-16 rounded-2xl text-[10px] font-bold uppercase tracking-[0.3em] flex items-center justify-center gap-3 hover:bg-[#f6f5f3]/70 transition-all group shadow-sm"
+        className="w-full bg-[#f6f5f3]/50 text-[#4a3a33] h-14 rounded-2xl text-[10px] font-bold uppercase tracking-[0.3em] flex items-center justify-center gap-3 hover:bg-[#f6f5f3]/70 transition-all group shadow-sm"
       >
         <Wind size={16} className="text-[#4a3a33]/45 group-hover:rotate-90 transition-transform duration-1000" />
         Pause for a Minute

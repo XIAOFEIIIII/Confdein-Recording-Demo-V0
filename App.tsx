@@ -458,8 +458,8 @@ const App: React.FC = () => {
         ) : (
           <div className="px-10 pt-[32px] pb-32 text-[#4a3a33]">
             {activeTab === AppTab.HEALTH && (
-              <div className="animate-in fade-in slide-in-from-right-4 duration-500 max-w-2xl">
-                <StressDashboard onStartMeditation={() => setShowMeditation(true)} />
+              <div className="animate-in fade-in slide-in-from-right-4 duration-500 max-w-2xl" key={selectedDateStr}>
+                <StressDashboard selectedDateKey={selectedDateStr} onStartMeditation={() => setShowMeditation(true)} />
               </div>
             )}
 
