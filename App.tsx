@@ -320,6 +320,7 @@ const App: React.FC = () => {
                   onEntryClick={handleEntryClick}
                   scrollToDayIndex={selectedDayIndex}
                   onPageChange={setSelectedDayIndex}
+                  useRomanFont={currentUser === 'roman'}
                 />
               </div>
             )}

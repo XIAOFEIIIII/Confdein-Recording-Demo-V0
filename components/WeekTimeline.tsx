@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useCallback, useState } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { format, startOfWeek, addDays } from 'date-fns';
 import { Check } from 'lucide-react';
 
@@ -29,7 +29,6 @@ const WeekTimeline: React.FC<WeekTimelineProps> = ({
   onDayClick,
 }) => {
   const scrollRef = useRef<HTMLDivElement>(null);
-  const [isSnapping, setIsSnapping] = useState(false);
 
   const weeks = WEEK_OFFSETS.map(off => addWeeks(selectedWeekStart, off));
   const selectedWeekIndex = 2;
@@ -37,31 +36,11 @@ const WeekTimeline: React.FC<WeekTimelineProps> = ({
   // Keep selected week in view when selectedWeekStart changes
   useEffect(() => {
     const el = scrollRef.current;
-    if (!el || isSnapping) return;
-    el.scrollLeft = selectedWeekIndex * el.clientWidth;
-  }, [selectedWeekStart.getTime(), isSnapping]);
-
-  // Snap to nearest week when scroll ends (one swipe can jump multiple weeks)
-  const snapToNearestRef = useRef<() => void>(() => {});
-  snapToNearestRef.current = () => {
-    const el = scrollRef.current;
     if (!el) return;
-    const pageWidth = el.clientWidth;
-    const index = Math.round(el.scrollLeft / pageWidth);
-    const clamped = Math.max(0, Math.min(weeks.length - 1, index));
-    const weekStart = weeks[clamped];
-    if (weekStart.getTime() !== selectedWeekStart.getTime()) {
-      setIsSnapping(true);
-      onWeekChange(weekStart);
-      el.scrollLeft = clamped * pageWidth;
-      setTimeout(() => setIsSnapping(false), 50);
-    } else {
-      el.scrollTo({ left: clamped * pageWidth, behavior: 'smooth' });
-    }
-  };
-  const handleScrollEnd = useCallback(() => { snapToNearestRef.current(); }, []);
+    el.scrollLeft = selectedWeekIndex * el.clientWidth;
+  }, [selectedWeekStart.getTime()]);
 
-  // On scroll: debounced week change; on scroll end snap to nearest week
+  // On scroll (debounce): detect which week is snapped and notify parent
   useEffect(() => {
     const el = scrollRef.current;
     if (!el) return;
@@ -80,35 +59,25 @@ const WeekTimeline: React.FC<WeekTimelineProps> = ({
         }
       }, 120);
     };
-    let scrollEndTimer: ReturnType<typeof setTimeout>;
-    const scheduleSnap = () => {
-      clearTimeout(scrollEndTimer);
-      scrollEndTimer = setTimeout(handleScrollEnd, 150);
-    };
     el.addEventListener('scroll', handleScroll, { passive: true });
-    el.addEventListener('scroll', scheduleSnap, { passive: true });
-    el.addEventListener('scrollend', handleScrollEnd);
     return () => {
       clearTimeout(tick);
-      clearTimeout(scrollEndTimer);
       el.removeEventListener('scroll', handleScroll);
-      el.removeEventListener('scroll', scheduleSnap);
-      el.removeEventListener('scrollend', handleScrollEnd);
     };
-  }, [weeks, selectedWeekStart, onWeekChange, handleScrollEnd]);
+  }, [weeks, selectedWeekStart, onWeekChange]);
 
   return (
     <div
       ref={scrollRef}
-      className="flex-shrink-0 flex overflow-x-auto no-scrollbar border-b border-[#e9e8e6] bg-[#fbfbfa]"
-      style={{ WebkitOverflowScrolling: 'touch' }}
+      className="flex-shrink-0 flex overflow-x-auto snap-x snap-mandatory no-scrollbar border-b border-[#e9e8e6] bg-[#fbfbfa]"
+      style={{ scrollSnapType: 'x mandatory', WebkitOverflowScrolling: 'touch' }}
     >
       {weeks.map((weekStart) => {
         const days = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
         return (
           <div
             key={weekStart.getTime()}
-            className="flex-shrink-0 w-full flex justify-center py-2"
+            className="flex-shrink-0 w-full flex justify-center py-2 snap-start"
             style={{ minWidth: '100%' }}
           >
             <div className="w-full max-w-4xl px-8 flex items-center justify-between gap-1">

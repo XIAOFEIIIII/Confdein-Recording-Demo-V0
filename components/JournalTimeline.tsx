@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { JournalEntry } from '../types';
 import { format, startOfDay, startOfWeek, addDays } from 'date-fns';
 import { Quote } from 'lucide-react';
@@ -12,6 +12,8 @@ interface JournalTimelineProps {
   scrollToDayIndex?: number | null;
   /** Called when user scrolls to a different day. */
   onPageChange?: (index: number) => void;
+  /** When true (Roman), use slightly larger font sizes for readability with Patrick Hand. */
+  useRomanFont?: boolean;
 }
 
 const WEEK_STARTS_ON = 0; // Sunday
@@ -22,7 +24,12 @@ const JournalTimeline: React.FC<JournalTimelineProps> = ({
   onEntryClick,
   scrollToDayIndex = null,
   onPageChange,
+  useRomanFont = false,
 }) => {
+  const textMain = useRomanFont ? 'text-[17px]' : 'text-[15px]';
+  const textScripture = useRomanFont ? 'text-[15px]' : 'text-[13px]';
+  const textTime = useRomanFont ? 'text-[13px]' : 'text-[12px]';
+  const textMeta = useRomanFont ? 'text-[13px]' : 'text-[12px]';
   const [currentPageIndex, setCurrentPageIndex] = useState(0);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [isScrolling, setIsScrolling] = useState(false);
@@ -73,25 +80,7 @@ const JournalTimeline: React.FC<JournalTimelineProps> = ({
     setTimeout(() => setIsScrolling(false), 500);
   }, [scrollToDayIndex, currentPageIndex, onPageChange]);
 
-  // Snap to nearest day when scroll ends (so one swipe can jump multiple days without passing through)
-  const snapToNearestRef = useRef<() => void>(() => {});
-  snapToNearestRef.current = () => {
-    const container = scrollContainerRef.current;
-    if (!container) return;
-    const pageWidth = container.clientWidth;
-    const pageIndex = Math.round(container.scrollLeft / pageWidth);
-    const clamped = Math.max(0, Math.min(6, pageIndex));
-    const targetLeft = clamped * pageWidth;
-    if (Math.abs(container.scrollLeft - targetLeft) < 2) return;
-    setIsScrolling(true);
-    container.scrollTo({ left: targetLeft, behavior: 'smooth' });
-    setCurrentPageIndex(clamped);
-    onPageChange?.(clamped);
-    setTimeout(() => setIsScrolling(false), 400);
-  };
-  const handleScrollEnd = useCallback(() => { snapToNearestRef.current(); }, []);
-
-  // Handle scroll: update current page for header; on scroll end snap to nearest day
+  // Update current page when user scrolls (with snap, each swipe lands on one page)
   useEffect(() => {
     const container = scrollContainerRef.current;
     if (!container) return;
@@ -107,23 +96,9 @@ const JournalTimeline: React.FC<JournalTimelineProps> = ({
       }
     };
 
-    let scrollEndTimer: ReturnType<typeof setTimeout>;
-    const scheduleSnap = () => {
-      clearTimeout(scrollEndTimer);
-      scrollEndTimer = setTimeout(handleScrollEnd, 150);
-    };
-
     container.addEventListener('scroll', handleScroll, { passive: true });
-    container.addEventListener('scroll', scheduleSnap, { passive: true });
-    container.addEventListener('scrollend', handleScrollEnd);
-
-    return () => {
-      container.removeEventListener('scroll', handleScroll);
-      container.removeEventListener('scroll', scheduleSnap);
-      clearTimeout(scrollEndTimer);
-      container.removeEventListener('scrollend', handleScrollEnd);
-    };
-  }, [currentPageIndex, isScrolling, onPageChange, handleScrollEnd]);
+    return () => container.removeEventListener('scroll', handleScroll);
+  }, [currentPageIndex, isScrolling, onPageChange]);
 
   const handlePageIndicatorClick = (index: number) => {
     const container = scrollContainerRef.current;
@@ -142,8 +117,9 @@ const JournalTimeline: React.FC<JournalTimelineProps> = ({
     <div className="w-full h-full flex flex-col" style={{ height: '100%' }}>
       <div
         ref={scrollContainerRef}
-        className="flex-1 flex overflow-x-auto no-scrollbar"
+        className="flex-1 flex overflow-x-auto snap-x snap-mandatory no-scrollbar"
         style={{
+          scrollSnapType: 'x mandatory',
           WebkitOverflowScrolling: 'touch',
           height: '100%'
         }}
@@ -153,7 +129,7 @@ const JournalTimeline: React.FC<JournalTimelineProps> = ({
           return (
             <div
               key={dayKey}
-              className="flex-shrink-0 w-full h-full"
+              className="flex-shrink-0 w-full h-full snap-start"
               style={{
                 width: '100%',
                 minWidth: '100%',
@@ -179,7 +155,7 @@ const JournalTimeline: React.FC<JournalTimelineProps> = ({
                 {dayEntries.length === 0 ? (
                   <div className="flex flex-col items-center justify-center py-24 px-6 text-stone-300">
                     <Quote size={28} className="opacity-20 mb-4" />
-                    <p className="handwriting text-base text-center italic opacity-50">
+                    <p className={`handwriting ${useRomanFont ? 'text-lg' : 'text-base'} text-center italic opacity-50`}>
                       The page is waiting for your voice...
                     </p>
                   </div>
@@ -200,7 +176,7 @@ const JournalTimeline: React.FC<JournalTimelineProps> = ({
                           padding: 0
                         }}
                       >
-                        <span className="text-[12px] font-bold text-stone-200 tracking-widest uppercase" style={{ lineHeight: '32px' }}>
+                        <span className={`${textTime} font-bold text-stone-200 tracking-widest uppercase`} style={{ lineHeight: '32px' }}>
                           {format(entry.timestamp, 'HH:mm')}
                         </span>
                       </div>
@@ -225,7 +201,7 @@ const JournalTimeline: React.FC<JournalTimelineProps> = ({
                           return (
                             <>
                               <p 
-                                className={`handwriting text-stone-800 text-[15px] opacity-90 select-none whitespace-pre-line ${hasTitle ? 'journal-transcript' : ''}`}
+                                className={`handwriting text-stone-800 ${textMain} opacity-90 select-none whitespace-pre-line ${hasTitle ? 'journal-transcript' : ''}`}
                                 style={{
                                   lineHeight: '32px',
                                   margin: 0,
@@ -239,7 +215,7 @@ const JournalTimeline: React.FC<JournalTimelineProps> = ({
                               </p>
                               {entry.scripture && (
                                 <p 
-                                  className="handwriting text-stone-800 text-[13px] opacity-90 select-none"
+                                  className={`handwriting text-stone-800 ${textScripture} opacity-90 select-none`}
                                   style={{
                                     lineHeight: '32px',
                                     margin: 0,
@@ -253,7 +229,7 @@ const JournalTimeline: React.FC<JournalTimelineProps> = ({
                               )}
                               {body && (
                                 <p 
-                                  className="handwriting text-stone-800 text-[15px] opacity-90 select-none whitespace-pre-line"
+                                  className={`handwriting text-stone-800 ${textMain} opacity-90 select-none whitespace-pre-line`}
                                   style={{
                                     lineHeight: '32px',
                                     margin: 0,
@@ -286,7 +262,7 @@ const JournalTimeline: React.FC<JournalTimelineProps> = ({
                         {entry.keywords && entry.keywords.map((kw, i) => (
                           <span
                             key={i}
-                            className="text-[12px] text-stone-400 inline-flex items-center"
+                            className={`${textMeta} text-stone-400 inline-flex items-center`}
                             style={{ height: '32px', lineHeight: '32px' }}
                           >
                             #{kw.toLowerCase()}
