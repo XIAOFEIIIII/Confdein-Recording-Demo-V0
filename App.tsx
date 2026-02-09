@@ -51,20 +51,18 @@ const App: React.FC = () => {
   const [versePool, setVersePool] = useState<Array<{ verse: string; reference: string }>>(initial.versePool);
   const [userPrayerRequests, setUserPrayerRequests] = useState<PrayerRequest[]>([]);
 
-  // Week timeline: which week is selected (Sunday date); can change by horizontal swipe
-  const [selectedWeekStart, setSelectedWeekStart] = useState(() =>
-    startOfWeek(new Date(), { weekStartsOn: 0 })
-  );
-  const getTodayWeekIndex = (weekStart: Date) => {
-    const today = new Date();
+  // Week timeline: default focus on 2026-01-25 (Sunday = index 0 in that week)
+  const defaultFocusDate = new Date(2026, 0, 25); // Jan 25, 2026
+  const defaultWeekStart = startOfWeek(defaultFocusDate, { weekStartsOn: 0 });
+  const getDayIndexInWeek = (weekStart: Date, date: Date) => {
+    const dateStr = format(startOfDay(date), 'yyyy-MM-dd');
     for (let i = 0; i < 7; i++) {
-      if (format(addDays(weekStart, i), 'yyyy-MM-dd') === format(startOfDay(today), 'yyyy-MM-dd')) return i;
+      if (format(addDays(weekStart, i), 'yyyy-MM-dd') === dateStr) return i;
     }
     return 0;
   };
-  const [selectedDayIndex, setSelectedDayIndex] = useState(() =>
-    getTodayWeekIndex(startOfWeek(new Date(), { weekStartsOn: 0 }))
-  );
+  const [selectedWeekStart, setSelectedWeekStart] = useState(() => defaultWeekStart);
+  const [selectedDayIndex, setSelectedDayIndex] = useState(() => getDayIndexInWeek(defaultWeekStart, defaultFocusDate));
 
   // All dates that have at least one journal entry (for week timeline dots in any week)
   const datesWithEntries = React.useMemo(() => {
@@ -72,6 +70,8 @@ const App: React.FC = () => {
     entries.forEach(e => set.add(format(startOfDay(e.timestamp), 'yyyy-MM-dd')));
     return set;
   }, [entries]);
+
+  const hasUserSwitchedRef = React.useRef(false);
 
   // Load user-specific data when currentUser changes (e.g. after switching in Settings)
   useEffect(() => {
@@ -83,16 +83,22 @@ const App: React.FC = () => {
     setAvatarSeed(data.avatarSeed);
     setAvatarUrl(data.avatarUrl);
     setUserPrayerRequests([]);
-    // Default week to the one that contains the most recent entry, so notes are visible (e.g. Roman's Jan/Feb 2025)
-    if (data.entries.length > 0) {
-      const latest = data.entries.reduce((a, b) => (a.timestamp > b.timestamp ? a : b));
-      setSelectedWeekStart(startOfWeek(new Date(latest.timestamp), { weekStartsOn: 0 }));
-    } else {
-      setSelectedWeekStart(startOfWeek(new Date(), { weekStartsOn: 0 }));
+    // Only move week/day to latest entry when user has explicitly switched (so initial load keeps default 1/25)
+    if (hasUserSwitchedRef.current) {
+      if (data.entries.length > 0) {
+        const latest = data.entries.reduce((a, b) => (a.timestamp > b.timestamp ? a : b));
+        const weekStart = startOfWeek(new Date(latest.timestamp), { weekStartsOn: 0 });
+        setSelectedWeekStart(weekStart);
+        setSelectedDayIndex(getDayIndexInWeek(weekStart, new Date(latest.timestamp)));
+      } else {
+        setSelectedWeekStart(startOfWeek(new Date(), { weekStartsOn: 0 }));
+        setSelectedDayIndex(0);
+      }
     }
   }, [currentUser]);
 
   const handleSwitchUser = (userId: CurrentUserId) => {
+    hasUserSwitchedRef.current = true;
     setStoredUserId(userId);
     setCurrentUser(userId);
   };
