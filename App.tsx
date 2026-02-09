@@ -327,6 +327,13 @@ const App: React.FC = () => {
 
             {journalSubTab === 'prayer' && (
               <div className="px-10 pt-[32px] pb-44 text-[#4a3a33] max-w-2xl">
+                {/* Roman: same font sizes as journal (17px main, 15px secondary) */}
+                {(() => {
+                  const isRoman = currentUser === 'roman';
+                  const prayerMain = isRoman ? 'text-[17px]' : 'text-[15px]';
+                  const prayerSecondary = isRoman ? 'text-[15px]' : 'text-[13px]';
+                  return (
+                    <>
                 {/* Row 1: Add request label + button — exactly 32px */}
                 <div
                   className="flex items-center justify-between gap-4"
@@ -352,7 +359,7 @@ const App: React.FC = () => {
                   placeholder="Name"
                   value={newPrayerName}
                   onChange={(e) => setNewPrayerName(e.target.value)}
-                  className="w-full bg-transparent border-b border-[#e3e1dc] text-[15px] handwriting text-[#4a3a33] placeholder:text-[#4a3a33]/35 focus:outline-none focus:border-[#4a3a33]/40 block"
+                  className={`w-full bg-transparent border-b border-[#e3e1dc] ${prayerMain} handwriting text-[#4a3a33] placeholder:text-[#4a3a33]/35 focus:outline-none focus:border-[#4a3a33]/40 block`}
                   style={{ height: '32px', lineHeight: '32px', margin: 0, padding: 0 }}
                 />
                 {/* Rows 3–4: Prayer request textarea — 64px (2 grid lines) */}
@@ -361,7 +368,7 @@ const App: React.FC = () => {
                   value={newPrayerRequest}
                   onChange={(e) => setNewPrayerRequest(e.target.value)}
                   rows={2}
-                  className="w-full bg-transparent border-b border-[#e3e1dc] text-[15px] handwriting text-[#4a3a33] placeholder:text-[#4a3a33]/35 focus:outline-none focus:border-[#4a3a33]/40 resize-none block"
+                  className={`w-full bg-transparent border-b border-[#e3e1dc] ${prayerMain} handwriting text-[#4a3a33] placeholder:text-[#4a3a33]/35 focus:outline-none focus:border-[#4a3a33]/40 resize-none block`}
                   style={{ minHeight: '64px', lineHeight: '32px', margin: 0, padding: 0 }}
                 />
                 {/* Spacer — 32px */}
@@ -369,7 +376,7 @@ const App: React.FC = () => {
 
                 {displayedPrayerRequests.length === 0 ? (
                   <p
-                    className="handwriting text-[#4a3a33]/45 text-[15px]"
+                    className={`handwriting text-[#4a3a33]/45 ${prayerMain}`}
                     style={{ lineHeight: '32px', margin: 0, padding: 0, minHeight: '32px' }}
                   >
                     No prayer requests yet. Add one above or record a journal entry that includes a prayer request.
@@ -385,14 +392,14 @@ const App: React.FC = () => {
                         <div className="flex-1 min-w-0">
                           {/* Person name — exactly 32px row */}
                           <p
-                            className="handwriting text-[13px] text-[#4a3a33]/45"
+                            className={`handwriting ${prayerSecondary} text-[#4a3a33]/45`}
                             style={{ height: '32px', lineHeight: '32px', margin: 0, padding: 0, display: 'block' }}
                           >
                             {pr.personName}
                           </p>
                           {/* Request — 32px line height, aligns to grid */}
                           <p
-                            className="handwriting text-[#4a3a33] text-[15px] opacity-90"
+                            className={`handwriting text-[#4a3a33] ${prayerMain} opacity-90`}
                             style={{ lineHeight: '32px', margin: 0, padding: 0, display: 'block', minHeight: '32px' }}
                           >
                             {pr.request}
@@ -411,11 +418,20 @@ const App: React.FC = () => {
                     ))}
                   </div>
                 )}
+                    </>
+                  );
+                })()}
               </div>
             )}
 
             {journalSubTab === 'verse' && (
               <div className="px-10 pt-[32px] pb-44 text-[#4a3a33] max-w-2xl">
+                {(() => {
+                  const isRoman = currentUser === 'roman';
+                  const verseMain = isRoman ? 'text-[17px]' : 'text-[15px]';
+                  const verseRef = isRoman ? 'text-[15px]' : 'text-[13px]';
+                  return (
+                    <>
                 <div className="flex items-center justify-between" style={{ height: '32px', marginBottom: '32px' }}>
                   <button
                     onClick={() => {
@@ -438,13 +454,13 @@ const App: React.FC = () => {
                   {verseList.map((v, i) => (
                     <div key={`${v.reference}-${i}`} className="block" style={{ marginBottom: '32px' }}>
                       <p
-                        className="handwriting text-[#4a3a33] text-[15px] opacity-90"
+                        className={`handwriting text-[#4a3a33] ${verseMain} opacity-90`}
                         style={{ lineHeight: '32px', margin: 0, padding: 0, display: 'block', minHeight: '32px' }}
                       >
                         "{v.verse}"
                       </p>
                       <p
-                        className="handwriting text-[#4a3a33]/45 text-[13px]"
+                        className={`handwriting text-[#4a3a33]/45 ${verseRef}`}
                         style={{ lineHeight: '32px', margin: 0, padding: 0, display: 'block', minHeight: '32px' }}
                       >
                         — {v.reference}
@@ -453,6 +469,9 @@ const App: React.FC = () => {
                     </div>
                   ))}
                 </div>
+                    </>
+                  );
+                })()}
               </div>
             )}
           </div>
