@@ -169,6 +169,7 @@ God is orderly, and therefore He expects that His creation do all things "decent
 const ROMAN_DEVOTIONAL: Devotional = {
   verse: 'The fear of man lays a snare, but whoever trusts in the LORD is safe.',
   reference: 'Proverbs 29:25',
+  title: 'Truth Over Approval',
   quote: 'Every time we choose approval over truth, we trade freedom for fear.',
   reflection: `There is a quiet battle many of us fight every day, often without naming it. It's the pull between being truthful and being liked. In moments when honesty feels risky, we learn to soften the truth, bend it slightly, or hide parts of ourselves—not to deceive maliciously, but to stay safe, accepted, and unchallenged.
 
@@ -183,6 +184,7 @@ When the Spirit stops you before a lie leaves your mouth, that moment is sacred.
 const ROMAN_DEVOTIONAL_2026_01_25: Devotional = {
   verse: 'What do you have that you did not receive? And if you did receive it, why do you boast as though you did not?',
   reference: '1 Corinthians 4:7',
+  title: "When 'I Deserve' Takes Over",
   quote: 'Grace stops being grace the moment we think we deserve it.',
   reflection: `There's a quiet shift that can happen in the heart—almost without us noticing. We start with gratitude: "Lord, thank You." But over time, if we're not careful, gratitude can drift into entitlement: "Lord, I worked hard… so I should have this." And the moment "I deserve" becomes the soundtrack of our life, our joy becomes fragile. Pleasure stops being a gift and turns into a demand. We need more, we chase more, and somehow we're still not satisfied.
 
@@ -197,6 +199,7 @@ Today, let grace reframe your expectations. Ask the Lord to expose the places wh
 const ROMAN_DEVOTIONAL_2026_01_31: Devotional = {
   verse: 'Blessed are those who hunger and thirst for righteousness, for they shall be satisfied.',
   reference: 'Matthew 5:6',
+  title: 'Still Seeking',
   quote: 'True maturity is not being known by many, but still choosing to seek God when you could rely on your name.',
   reflection: `It's easy to assume that spiritual hunger fades as success grows. We tell ourselves that those who are admired, influential, or celebrated must have somehow "arrived." But moments like this gently correct that assumption. Seeing people who are known by many still worship sincerely, still testify honestly, still seek the Lord with humility reminds us of something deeply important: knowing God is not a phase we outgrow.
 
@@ -211,6 +214,7 @@ Let this moment reshape your imagination. Don't rush to admire people for who th
 const ROMAN_DEVOTIONAL_2026_02_01: Devotional = {
   verse: 'Yes, Lord, yet even the dogs eat the crumbs that fall from their masters\' table.',
   reference: 'Matthew 15:27',
+  title: 'Even the Crumbs',
   quote: 'Faith does not insist on entitlement; it clings to mercy.',
   reflection: `There are moments in prayer when God's response feels sharp, distant, or even discouraging. Moments when His words don't sound like comfort, but like resistance. Matthew 15:27 places us right inside one of those moments. The woman has already been ignored, already been challenged, and still she stays. When Jesus' words seem to push her away, she does not argue her worth—she clings to His mercy.
 

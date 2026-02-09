@@ -514,8 +514,8 @@ const App: React.FC = () => {
                             className="w-full text-left bg-[#f6f5f3]/50 hover:bg-[#f6f5f3]/70 rounded-2xl p-6 shadow-sm transition-all group"
                           >
                             <div className="flex items-center justify-between">
-                              <h4 className="text-[14px] font-bold uppercase tracking-widest text-[#4a3a33]">
-                                The Reflection
+                              <h4 className="text-[14px] font-bold text-[#4a3a33]">
+                                {displayedDevotional.title ?? 'The Reflection'}
                               </h4>
                               <ChevronRight size={18} className="text-[#4a3a33]/40 group-hover:text-[#4a3a33] group-hover:translate-x-1 transition-all" />
                             </div>
@@ -568,7 +568,7 @@ const App: React.FC = () => {
       )}
       {showReader === 'reflection' && displayedDevotional?.reflection && (
         <ImmersiveReader
-          title="The Reflection"
+          title={displayedDevotional.title ?? 'The Reflection'}
           content={displayedDevotional.reflection}
           onClose={() => setShowReader(null)}
         />

@@ -30,6 +30,8 @@ export interface StressData {
 export interface Devotional {
   verse: string;
   reference: string;
+  /** Short title for the reflection card (e.g. "Truth Over Approval"). When set, shown instead of "The Reflection". */
+  title?: string;
   reflection: string;
   prayer: string;
   quote?: string;
