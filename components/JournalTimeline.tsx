@@ -243,7 +243,7 @@ const JournalTimeline: React.FC<JournalTimelineProps> = ({
                       className="relative group animate-in fade-in duration-700 cursor-pointer"
                       onClick={() => onEntryClick?.(entry)}
                     >
-                      {/* Time Header: Exactly 32px high, aligned to grid */}
+                      {/* Time Header: Exactly 32px high; for prayer entries show label instead of time, same font as timestamp */}
                       <div 
                         className="flex items-center gap-2 select-none"
                         style={{ 
@@ -253,22 +253,15 @@ const JournalTimeline: React.FC<JournalTimelineProps> = ({
                           padding: 0
                         }}
                       >
-                        <span className={`${textTime} font-bold text-stone-200 tracking-widest uppercase`} style={{ lineHeight: '32px' }}>
-                          {format(entry.timestamp, 'HH:mm')}
+                        <span className={`${textTime} font-bold tracking-widest uppercase ${entry.isPrayerEntry && entry.prayerSlotId ? 'text-stone-400/90' : 'text-stone-200'}`} style={{ lineHeight: '32px' }}>
+                          {entry.isPrayerEntry && entry.prayerSlotId
+                            ? (PRAYER_SLOT_LABEL[entry.prayerSlotId] ?? entry.prayerSlotId)
+                            : format(entry.timestamp, 'HH:mm')}
                         </span>
                         <span className="text-stone-300 font-mono" style={{ lineHeight: '32px', fontSize: '18px' }}>
                           {entry.moodLevel === 1 ? ':(' : entry.moodLevel === 2 ? ':/' : entry.moodLevel === 3 ? ':|' : entry.moodLevel === 4 ? ':)' : ':D'}
                         </span>
                       </div>
-                      {/* Second line: prayer slot label only (uppercase, gray) */}
-                      {entry.isPrayerEntry && entry.prayerSlotId && (
-                        <div
-                          className={`${textMeta} text-stone-400/90 select-none uppercase tracking-wide`}
-                          style={{ height: '32px', lineHeight: '32px', margin: 0, padding: 0 }}
-                        >
-                          {PRAYER_SLOT_LABEL[entry.prayerSlotId] ?? entry.prayerSlotId}
-                        </div>
-                      )}
                       {/* Handwriting Content Area: title, then scripture line, then body */}
                       {entry.transcript && (
                         <div 

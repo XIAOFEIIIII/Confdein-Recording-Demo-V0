@@ -87,25 +87,26 @@ function ensurePrayerEntriesForDates(
   return merged;
 }
 
+// Erica: one topic per day across Jan 18–23 (plus prayer entries on 21 & 22)
 const ERICA_ENTRIES: JournalEntry[] = [
   {
     id: 'entry-1',
-    timestamp: now - 1000 * 60 * 30,
+    timestamp: new Date(2026, 0, 23, 20, 30).getTime(),
     transcript: "Jesus and sexual purity\n\nJesus took the issue of sexual purity further when he said that anyone who even looks at a woman with lust has already committed adultery in his heart. Similarly, we should avoid entertaining or fantasizing about what God has forbidden.\n\nLove fulfills the requirements of the commandments.",
     summary: "Jesus on purity and love fulfilling the law.",
     keywords: ["sermon notes"],
     mood: 'peaceful',
-    moodLevel: detectMoodFromTimestamp(now - 1000 * 60 * 30),
+    moodLevel: detectMoodFromTimestamp(new Date(2026, 0, 23, 20, 30).getTime()),
     scripture: 'Lev 18:5, 20',
   },
   {
     id: 'entry-2',
-    timestamp: now - 1000 * 60 * 60 * 3,
+    timestamp: new Date(2026, 0, 22, 18, 0).getTime(),
     transcript: "Respect for the elderly\n\nPeople often find it easy to dismiss the opinions of the elderly and avoid taking time to visit with them. But the fact that God commanded the Israelites to show respect for the elderly shows how seriously we should take the responsibility of respecting those older than we are. Their wisdom gained from experience can save us from many pitfalls.",
     summary: "Honoring the elderly and valuing their wisdom.",
     keywords: [],
     mood: 'hopeful',
-    moodLevel: detectMoodFromTimestamp(now - 1000 * 60 * 60 * 3),
+    moodLevel: detectMoodFromTimestamp(new Date(2026, 0, 22, 18, 0).getTime()),
     scripture: 'Lev 19:32',
     prayerRequests: [
       {
@@ -113,39 +114,39 @@ const ERICA_ENTRIES: JournalEntry[] = [
         personName: 'Grandma',
         request: 'Help me visit and honor my elders with patience and listen to their wisdom.',
         status: 'active',
-        createdAt: now - 1000 * 60 * 60 * 2,
+        createdAt: new Date(2026, 0, 22, 17, 0).getTime(),
         term: 'long',
       },
     ],
   },
   {
     id: 'entry-3',
-    timestamp: subHours(now, 24).getTime(),
+    timestamp: new Date(2026, 0, 20, 20, 0).getTime(),
     transcript: "Child sacrifice\n\nSacrificing children to the gods was a common practice in ancient religions. The Ammonites, Israel's neighbors, made child sacrifices to Molech (their national god) as part of their religion. They and other surrounding pagan nations saw their children as the greatest gift they could offer to ward off evil or appease angry gods. God made it clear that this practice was detestable and strictly forbidden. In Old Testament times, just as today, His character made human sacrifice unthinkable.\n\nUnlike the pagan gods, He is a God of love, who does not need to be appeased.\nHe is a God of life, who prohibits murder and encourages practices that lead to health and happiness.\nHe is a God of the helpless, who shows special concern for children.\nHe is a God of unselfishness, who, instead of demanding human sacrifices, sacrificed Himself for us.",
     summary: "God's character versus pagan sacrifice; His care for the helpless.",
     keywords: ["sermon notes"],
     mood: 'grateful',
-    moodLevel: detectMoodFromTimestamp(subHours(now, 24).getTime()),
+    moodLevel: detectMoodFromTimestamp(new Date(2026, 0, 20, 20, 0).getTime()),
     scripture: 'Lev 18:21; 20:2–5',
   },
   {
     id: 'entry-4',
-    timestamp: subHours(now, 26).getTime(), // Jan 25 ~19:00
+    timestamp: new Date(2026, 0, 21, 19, 0).getTime(),
     transcript: "Summarizing the law\n\nSome people think the Bible is nothing but a book of rules. But Jesus neatly summarized all these rules when he said to love God with all your heart, and to love your neighbor as yourself. He called these the greatest commandments (or rules) of all. By carrying out Jesus' simple commands, we find ourselves following all of God's other laws as well.",
     summary: "Jesus' summary: love God and love your neighbor.",
     keywords: [],
     mood: 'peaceful',
-    moodLevel: detectMoodFromTimestamp(subHours(now, 26).getTime()),
+    moodLevel: detectMoodFromTimestamp(new Date(2026, 0, 21, 19, 0).getTime()),
     scripture: 'Lev 19:18',
   },
   {
     id: 'entry-5',
-    timestamp: subDays(now, 2).getTime(),
+    timestamp: new Date(2026, 0, 19, 19, 0).getTime(),
     transcript: "Foreigners and compassion\n\nHow do you feel when you encounter foreigners, especially those who don't speak your language? Are you impatient? Do you think or act as if they should go back to where they came from? Are you tempted to take advantage of them? God says to treat foreigners as you'd treat fellow citizens, to love them as you love yourself. In reality, we are all foreigners in this world because it is only our temporary home. View your interactions with strangers, newcomers, and foreigners as opportunities to demonstrate God's love.",
     summary: "Treating foreigners with compassion as God commands.",
     keywords: [],
     mood: 'hopeful',
-    moodLevel: detectMoodFromTimestamp(subDays(now, 2).getTime()),
+    moodLevel: detectMoodFromTimestamp(new Date(2026, 0, 19, 19, 0).getTime()),
     scripture: 'Lev 19:33–34',
     prayerRequests: [
       {
@@ -153,41 +154,41 @@ const ERICA_ENTRIES: JournalEntry[] = [
         personName: 'New neighbors',
         request: 'Give me a heart to welcome and love newcomers and foreigners as You do.',
         status: 'active',
-        createdAt: subDays(now, 2).getTime() - 1000 * 60 * 60 * 2,
+        createdAt: new Date(2026, 0, 19, 17, 0).getTime(),
         term: 'long',
       },
     ],
   },
   {
     id: 'entry-6',
-    timestamp: subDays(now, 2).getTime() - 1000 * 60 * 60 * 3, // Jan 24 18:00
+    timestamp: new Date(2026, 0, 18, 18, 0).getTime(),
     transcript: "THE OCCULT\n\nEveryone is interested in what the future holds, and we often look to others for guidance. But God warned about looking to the occult for advice. Mediums and spiritists were outlawed because God was not the source of their information. At best, occult practitioners are fakes whose predictions cannot be trusted. At worst, they are in contact with evil spirits and are thus extremely dangerous. We don't need to look to the occult for information about the future. God has given us the Bible so that we may obtain all the information we need—the Bible's teachings are trustworthy.",
     summary: "Avoiding the occult; trusting Scripture for the future.",
     keywords: ["sermon notes"],
     mood: 'peaceful',
-    moodLevel: detectMoodFromTimestamp(subDays(now, 2).getTime() - 1000 * 60 * 60 * 3),
+    moodLevel: detectMoodFromTimestamp(new Date(2026, 0, 18, 18, 0).getTime()),
     scripture: 'Lev 19:31; 20:6, 27',
   },
   // Seed prayer entries (with content)
   {
-    id: 'erica-prayer-morning-2026-01-24',
-    timestamp: new Date(2026, 0, 24, 7, 0, 0).getTime(),
+    id: 'erica-prayer-morning-2026-01-21',
+    timestamp: new Date(2026, 0, 21, 7, 0, 0).getTime(),
     transcript: "Started the day with gratitude. Asked for strength to love my neighbor and to be patient with the new people at work. Remembered Grandma—prayed for her health and for a visit soon.",
     summary: "Morning prayer: gratitude, neighbor love, Grandma.",
     keywords: [],
     mood: 'hopeful',
-    moodLevel: detectMoodFromTimestamp(new Date(2026, 0, 24, 7, 0, 0).getTime()) as MoodLevel,
+    moodLevel: detectMoodFromTimestamp(new Date(2026, 0, 21, 7, 0, 0).getTime()) as MoodLevel,
     isPrayerEntry: true,
     prayerSlotId: 'morning',
   },
   {
-    id: 'erica-prayer-evening-2026-01-25',
-    timestamp: new Date(2026, 0, 25, 21, 0, 0).getTime(),
+    id: 'erica-prayer-evening-2026-01-22',
+    timestamp: new Date(2026, 0, 22, 21, 0, 0).getTime(),
     transcript: "Quiet reflection before bed. Thanked God for the sermon on loving God and neighbor. Confessed rushing through the day without pausing. Asked for a more present heart tomorrow.",
     summary: "Evening reflection: thanks for sermon, confession, tomorrow.",
     keywords: [],
     mood: 'peaceful',
-    moodLevel: detectMoodFromTimestamp(new Date(2026, 0, 25, 21, 0, 0).getTime()) as MoodLevel,
+    moodLevel: detectMoodFromTimestamp(new Date(2026, 0, 22, 21, 0, 0).getTime()) as MoodLevel,
     isPrayerEntry: true,
     prayerSlotId: 'evening',
   },
@@ -298,6 +299,57 @@ God is orderly, and therefore He expects that His creation do all things "decent
   sections: [],
 };
 
+/** Jan 18 — "Where We Look for the Future" (Erica) */
+const ERICA_DEVOTIONAL_2026_01_18: Devotional = {
+  verse: '"Let no one be found among you who practices divination or sorcery, interprets omens, engages in witchcraft, or casts spells, or who is a medium or spiritist or who consults the dead."',
+  reference: 'Deuteronomy 18:10–11',
+  title: 'Where We Look for the Future',
+  quote: 'Seeking the future apart from God never brings clarity—only false confidence.',
+  reflection: `Uncertainty has a way of making us restless. When the future feels unclear, we instinctively look for guidance—someone who can tell us what is coming and how to prepare. Throughout history, people have turned to the occult, mediums, and spiritists for this very reason. But God speaks plainly about these practices, not out of fear, but out of protection.
+
+The problem is not curiosity about the future; it is the source we trust to guide us. God forbids seeking insight from the occult because He is not its source. At best, such practices offer deception and false confidence. At worst, they open the door to spiritual forces that do not seek our good. God's warning is not restrictive—it is loving. He knows that guidance detached from truth always leads to harm.
+
+In contrast, God has given us His Word. The Bible does not satisfy every curiosity about tomorrow, but it gives us everything we need to walk faithfully today. It reveals God's character, His promises, and His wisdom for life. Rather than offering control over the future, Scripture offers something better: trust. When we anchor ourselves in God's Word, we learn that we do not need secret knowledge to be secure—we need a faithful God to follow.`,
+  prayer: `Lord, when fear or curiosity tempts me to seek answers apart from You, draw my heart back to Your truth. Teach me to trust Your Word more than hidden knowledge or quick predictions. Help me walk faithfully today, confident that my future is secure in Your hands. Amen.`,
+  sections: [],
+};
+
+/** Jan 21 — "When Love Becomes the Measure" (Erica) */
+const ERICA_DEVOTIONAL_2026_01_21: Devotional = {
+  verse: '"You shall love the Lord your God with all your heart and with all your soul and with all your mind." This is the great and first commandment. And a second is like it: "You shall love your neighbor as yourself." On these two commandments depend all the Law and the Prophets.',
+  reference: 'Matthew 22:37–40',
+  title: 'When Love Becomes the Measure',
+  quote: 'God\'s commands are not a test to pass, but a way of life shaped by love.',
+  reflection: `It's easy to misunderstand the Bible as a long list of rules—things to do, things to avoid, standards to meet. When faith is framed this way, obedience can quickly feel heavy, and failure feels constant. But Jesus offers a surprising clarity when He summarizes all of God's commands with just two: love God with all your heart, and love your neighbor as yourself.
+
+In doing so, Jesus is not minimizing the law. He is revealing its heart. Every command God gives flows from love and leads toward love. When love is missing, rules become rigid and burdensome. But when love is present, obedience is no longer about checking boxes—it becomes a natural response to relationship. Love doesn't ignore God's law; it fulfills it.
+
+This reframes the way we examine our lives. The question is not only "Did I follow the rules?" but "Did love shape my actions?" Were my words rooted in love for God? Were my choices attentive to the people around me? When love becomes the measure, faith moves from performance to transformation. We find that in loving God and loving others, we are already walking in the way God intended all along.`,
+  prayer: `Lord, free me from seeing faith as mere rule-keeping. Teach me to love You with my whole heart and to love others as a true expression of that love. Let my obedience flow from relationship, not fear, and shape my life according to Your heart. Amen.`,
+  sections: [],
+};
+
+/** Jan 22 — "The Wisdom We Overlook" (Erica) */
+const ERICA_DEVOTIONAL_2026_01_22: Devotional = {
+  verse: '"Stand up in the presence of the aged, show respect for the elderly and revere your God. I am the LORD."',
+  reference: 'Leviticus 19:32',
+  title: 'The Wisdom We Overlook',
+  quote: 'To honor the elderly is to honor the wisdom God forms through time.',
+  reflection: `In a culture that prizes speed, innovation, and youth, it is easy to overlook the elderly. Their voices may seem slower, their stories familiar, their presence less urgent. But Scripture tells a different story. God's command to honor the elderly is not a sentimental gesture—it is a serious spiritual responsibility.
+
+Age carries weight because experience forms wisdom. Those who have walked longer with God and through life have seen patterns we have not yet recognized. They have faced consequences we are only beginning to imagine. When we dismiss the elderly, we do not simply ignore people—we disregard insight that could protect us from unnecessary pain and repeated mistakes.
+
+Honoring the elderly requires more than politeness. It calls for humility: the willingness to listen, to learn, and to slow down enough to receive wisdom that cannot be Googled or rushed. God values the wisdom formed through faithfulness over time, and He invites us to do the same. When we take time to listen to those who came before us, we honor not only them, but the God who has been shaping them through the years.`,
+  prayer: `Lord, forgive me for the times I have rushed past wisdom in my desire for independence or speed. Teach me to honor those older than me with humility and attentiveness. Help me listen well, learn faithfully, and value the wisdom You have shaped through years of experience. Amen.`,
+  sections: [],
+};
+
+const ERICA_DEVOTIONAL_BY_DATE: Record<string, Devotional> = {
+  '2026-01-18': ERICA_DEVOTIONAL_2026_01_18,
+  '2026-01-21': ERICA_DEVOTIONAL_2026_01_21,
+  '2026-01-22': ERICA_DEVOTIONAL_2026_01_22,
+};
+
 const ROMAN_DEVOTIONAL: Devotional = {
   verse: 'The fear of man lays a snare, but whoever trusts in the LORD is safe.',
   reference: 'Proverbs 29:25',
@@ -363,12 +415,20 @@ const ROMAN_DEVOTIONAL_BY_DATE: Record<string, Devotional> = {
   '2026-02-01': ROMAN_DEVOTIONAL_2026_02_01,
 };
 
-/** Get devotional for display; Roman uses date-specific when available, else default. */
+/** Dates that must always show empty state (no devotional content). */
+const ERICA_DEVOTIONAL_EMPTY_DATES: string[] = ['2026-01-25', '2026-01-26'];
+
+/** Get devotional for display: date-specific if set, else unlocked default, else null (empty state). */
 export function getDevotionalForUserAndDate(userId: CurrentUserId, dateStr: string): Devotional | null {
   const u = USER_DATA[userId];
   if (!u.devotional) return null;
+  if (userId === 'erica' && ERICA_DEVOTIONAL_EMPTY_DATES.includes(dateStr)) return null;
+  if (userId === 'erica' && ERICA_DEVOTIONAL_BY_DATE[dateStr]) return ERICA_DEVOTIONAL_BY_DATE[dateStr];
   if (userId === 'roman' && ROMAN_DEVOTIONAL_BY_DATE[dateStr]) return ROMAN_DEVOTIONAL_BY_DATE[dateStr];
-  return u.devotional;
+  if (typeof window !== 'undefined' && localStorage.getItem(`devotional_unlocked_${dateStr}`) === 'true') {
+    return u.devotional;
+  }
+  return null;
 }
 
 const ERICA_VERSES = [

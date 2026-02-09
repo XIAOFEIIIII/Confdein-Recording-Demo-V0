@@ -69,6 +69,7 @@ const App: React.FC = () => {
   const [avatarUrl, setAvatarUrl] = useState<string | undefined>(initial.avatarUrl);
   const [isLoadingDevo, setIsLoadingDevo] = useState(false);
   const [generatingDevotionalForDate, setGeneratingDevotionalForDate] = useState<string | null>(null);
+  const [unlockedDevotionalTick, setUnlockedDevotionalTick] = useState(0);
   const [verseList, setVerseList] = useState<Array<{ verse: string; reference: string; entryId?: string; source?: 'journal' }>>(initial.verseList);
   const [versePool, setVersePool] = useState<Array<{ verse: string; reference: string }>>(initial.versePool);
   const [userPrayerRequests, setUserPrayerRequests] = useState<PrayerRequest[]>([]);
@@ -588,7 +589,7 @@ const App: React.FC = () => {
 
   const selectedDate = addDays(selectedWeekStart, selectedDayIndex);
   const selectedDateStr = format(selectedDate, 'yyyy-MM-dd');
-  const displayedDevotional = getDevotionalForUserAndDate(currentUser, selectedDateStr) ?? devotional;
+  const displayedDevotional = getDevotionalForUserAndDate(currentUser, selectedDateStr);
 
   const getHeaderDateLabel = () => {
     const today = startOfDay(new Date());
@@ -983,8 +984,22 @@ const App: React.FC = () => {
                     )}
                   </div>
                 ) : (
-                  <div className="text-left py-24 text-[#4a3a33]/40 italic font-light text-xl">
-                    Record your thoughts to receive a blessing.
+                  <div className="flex flex-col items-center justify-center py-24 px-6 text-center">
+                    <p className="text-[#4a3a33]/50 font-light text-lg mb-8">
+                      No devotional for this day yet.
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (typeof window !== 'undefined') {
+                          localStorage.setItem(`devotional_unlocked_${selectedDateStr}`, 'true');
+                        }
+                        setUnlockedDevotionalTick((v) => v + 1);
+                      }}
+                      className="px-6 py-3 rounded-xl bg-[#4a3a33]/10 hover:bg-[#4a3a33]/20 text-[#4a3a33] font-medium transition-colors"
+                    >
+                      Unlock daily devotional
+                    </button>
                   </div>
                 )}
               </div>
