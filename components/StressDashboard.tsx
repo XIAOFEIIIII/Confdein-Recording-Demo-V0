@@ -123,7 +123,7 @@ const StressDashboard: React.FC<StressDashboardProps> = ({ onStartMeditation }) 
               </button>
             </div>
           </div>
-          <div className="bg-[#f6f5f3]/70 backdrop-blur-sm rounded-2xl p-5 shadow-sm h-[144px] flex flex-col overflow-hidden">
+          <div className="bg-[#f6f5f3]/50 rounded-2xl p-5 shadow-sm h-[144px] flex flex-col overflow-hidden">
             <p className="melrose-text text-[#4a3a33] overflow-y-auto flex-1 min-h-0">"{recommendedVerse.verse}"</p>
             <p className="text-[10px] font-bold uppercase tracking-[0.4em] text-[#4a3a33]/45 mt-3 flex-shrink-0">
               — {recommendedVerse.reference}
@@ -135,7 +135,7 @@ const StressDashboard: React.FC<StressDashboardProps> = ({ onStartMeditation }) 
       <button
         type="button"
         onClick={onStartMeditation}
-        className="w-full bg-[#f6f5f3] border border-[#e3e1dc] text-[#4a3a33] h-16 rounded-2xl text-[10px] font-bold uppercase tracking-[0.3em] flex items-center justify-center gap-3 hover:bg-[#f0efed] transition-all group"
+        className="w-full bg-[#f6f5f3]/50 text-[#4a3a33] h-16 rounded-2xl text-[10px] font-bold uppercase tracking-[0.3em] flex items-center justify-center gap-3 hover:bg-[#f6f5f3]/70 transition-all group shadow-sm"
       >
         <Wind size={16} className="text-[#4a3a33]/45 group-hover:rotate-90 transition-transform duration-1000" />
         Pause for a Minute

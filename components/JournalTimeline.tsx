@@ -1,79 +1,113 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { JournalEntry } from '../types';
-import { format, startOfDay, isToday } from 'date-fns';
+import { format, startOfDay, startOfWeek, addDays, isToday } from 'date-fns';
 import { Quote } from 'lucide-react';
 
 interface JournalTimelineProps {
   entries: JournalEntry[];
+  /** Sunday of the week to show (week can be changed by swiping week timeline). */
+  weekStart?: Date;
+  onEntryClick?: (entry: JournalEntry) => void;
+  /** Scroll to this day index (0=Sun..6=Sat) when changed from parent (e.g. week timeline click). */
+  scrollToDayIndex?: number | null;
+  /** Called when user scrolls to a different day. */
+  onPageChange?: (index: number) => void;
 }
 
-const JournalTimeline: React.FC<JournalTimelineProps> = ({ entries }) => {
+const WEEK_STARTS_ON = 0; // Sunday
+
+const JournalTimeline: React.FC<JournalTimelineProps> = ({
+  entries,
+  weekStart: weekStartProp,
+  onEntryClick,
+  scrollToDayIndex = null,
+  onPageChange,
+}) => {
   const [currentPageIndex, setCurrentPageIndex] = useState(0);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [isScrolling, setIsScrolling] = useState(false);
+  const scrollToDayIndexRef = useRef<number | null>(null);
 
-  if (entries.length === 0) {
-    return (
-      <div className="flex flex-col items-center justify-center py-32 px-10 text-stone-200">
-        <Quote size={32} className="opacity-10 mb-6" />
-        <p className="handwriting text-xl text-center italic opacity-40">
-          The page is waiting for your voice...
-        </p>
-      </div>
-    );
-  }
+  const today = new Date();
+  const weekStart = weekStartProp ?? startOfWeek(today, { weekStartsOn: WEEK_STARTS_ON });
+  const dayKeys = Array.from({ length: 7 }, (_, i) =>
+    format(addDays(weekStart, i), 'yyyy-MM-dd')
+  );
 
   // Group entries by day
   const groupedEntries: { [key: string]: JournalEntry[] } = {};
+  dayKeys.forEach(k => { groupedEntries[k] = []; });
   [...entries]
     .sort((a, b) => b.timestamp - a.timestamp)
     .forEach(entry => {
       const dayKey = format(startOfDay(entry.timestamp), 'yyyy-MM-dd');
-      if (!groupedEntries[dayKey]) groupedEntries[dayKey] = [];
-      groupedEntries[dayKey].push(entry);
+      if (groupedEntries[dayKey]) groupedEntries[dayKey].push(entry);
     });
 
-  const dayKeys = Object.keys(groupedEntries).sort((a, b) => b.localeCompare(a));
+  // Initial page = today's index in week
+  const todayIndex = dayKeys.indexOf(format(startOfDay(today), 'yyyy-MM-dd'));
+  const [initialized, setInitialized] = useState(false);
+  useEffect(() => {
+    if (initialized) return;
+    setCurrentPageIndex(todayIndex >= 0 ? todayIndex : 0);
+    setInitialized(true);
+  }, [todayIndex, initialized]);
 
-  // Handle scroll to update current page
+  // Scroll to day when parent sets scrollToDayIndex (e.g. week timeline click)
+  useEffect(() => {
+    if (scrollToDayIndex == null || scrollToDayIndex === scrollToDayIndexRef.current) return;
+    if (scrollToDayIndex === currentPageIndex) {
+      scrollToDayIndexRef.current = scrollToDayIndex;
+      return;
+    }
+    scrollToDayIndexRef.current = scrollToDayIndex;
+    const container = scrollContainerRef.current;
+    if (!container) return;
+    setIsScrolling(true);
+    container.scrollTo({
+      left: scrollToDayIndex * container.clientWidth,
+      behavior: 'smooth'
+    });
+    setCurrentPageIndex(scrollToDayIndex);
+    onPageChange?.(scrollToDayIndex);
+    setTimeout(() => setIsScrolling(false), 500);
+  }, [scrollToDayIndex, currentPageIndex, onPageChange]);
+
+  // Handle scroll to update current page and notify parent
   useEffect(() => {
     const container = scrollContainerRef.current;
     if (!container) return;
 
     const handleScroll = () => {
       if (isScrolling) return;
-      
       const scrollLeft = container.scrollLeft;
       const pageWidth = container.clientWidth;
       const newPageIndex = Math.round(scrollLeft / pageWidth);
-      
-      if (newPageIndex !== currentPageIndex && newPageIndex >= 0 && newPageIndex < dayKeys.length) {
+      if (newPageIndex !== currentPageIndex && newPageIndex >= 0 && newPageIndex < 7) {
         setCurrentPageIndex(newPageIndex);
+        onPageChange?.(newPageIndex);
       }
     };
 
     container.addEventListener('scroll', handleScroll, { passive: true });
     return () => container.removeEventListener('scroll', handleScroll);
-  }, [currentPageIndex, isScrolling, dayKeys.length]);
+  }, [currentPageIndex, isScrolling, onPageChange]);
 
-  // Scroll to page on index change (only when clicking indicator)
   const handlePageIndicatorClick = (index: number) => {
     const container = scrollContainerRef.current;
     if (!container) return;
-
     setIsScrolling(true);
     container.scrollTo({
       left: index * container.clientWidth,
       behavior: 'smooth'
     });
-    
+    setCurrentPageIndex(index);
+    onPageChange?.(index);
     setTimeout(() => setIsScrolling(false), 500);
   };
 
   return (
     <div className="w-full h-full flex flex-col" style={{ height: '100%' }}>
-      {/* Horizontal scrollable container */}
       <div
         ref={scrollContainerRef}
         className="flex-1 flex overflow-x-auto snap-x snap-mandatory no-scrollbar"
@@ -84,8 +118,8 @@ const JournalTimeline: React.FC<JournalTimelineProps> = ({ entries }) => {
         }}
       >
         {dayKeys.map((dayKey, dayIndex) => {
-          const dayEntries = groupedEntries[dayKey];
-          const entryDate = new Date(dayKey);
+          const dayEntries = groupedEntries[dayKey] ?? [];
+          const entryDate = new Date(dayKey + 'T12:00:00');
           const isTodayPage = isToday(entryDate);
           
           return (
@@ -136,10 +170,19 @@ const JournalTimeline: React.FC<JournalTimelineProps> = ({ entries }) => {
                   </div>
                 </div>
                 
-                {dayEntries.map((entry) => (
+                {dayEntries.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center py-24 px-6 text-stone-300">
+                    <Quote size={28} className="opacity-20 mb-4" />
+                    <p className="handwriting text-base text-center italic opacity-50">
+                      The page is waiting for your voice...
+                    </p>
+                  </div>
+                ) : (
+                dayEntries.map((entry) => (
                     <div 
                       key={entry.id} 
-                      className="relative group animate-in fade-in duration-700"
+                      className="relative group animate-in fade-in duration-700 cursor-pointer"
+                      onClick={() => onEntryClick?.(entry)}
                     >
                       {/* Time Header: Exactly 32px high, aligned to grid */}
                       <div 
@@ -247,7 +290,8 @@ const JournalTimeline: React.FC<JournalTimelineProps> = ({ entries }) => {
                       {/* Entry Spacer: Exactly 32px high (1 row) */}
                       <div style={{ height: '32px', margin: 0, padding: 0 }} />
                     </div>
-                ))}
+                ))
+                )}
               </div>
             </div>
           );

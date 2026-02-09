@@ -15,7 +15,7 @@ const Navigation: React.FC<NavigationProps> = ({ activeTab, setActiveTab, onReco
   const [isProcessing, setIsProcessing] = useState(false);
 
   const navItems = [
-    { id: AppTab.JOURNAL, icon: BookOpen, label: 'Today' },
+    { id: AppTab.JOURNAL, icon: BookOpen, label: 'Journal' },
     { id: AppTab.HEALTH, icon: Activity, label: 'Stress' },
     { id: AppTab.DEVOTIONAL, icon: Moon, label: 'Devo' },
   ];

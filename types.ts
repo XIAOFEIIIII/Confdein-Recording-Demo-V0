@@ -36,9 +36,20 @@ export interface Devotional {
   sections?: Array<{ title: string; content: string }>;
 }
 
+export type CurrentUserId = 'erica' | 'roman';
+
+export interface UserProfile {
+  id: CurrentUserId;
+  displayName: string;
+  avatarSeed: string;
+  /** When set, used instead of DiceBear avatar (e.g. /avatars/erica.jpg for African woman, /avatars/roman.jpg for Filipino male). */
+  avatarUrl?: string;
+}
+
 export enum AppTab {
   JOURNAL = 'journal',
   HEALTH = 'health',
   DEVOTIONAL = 'devotional',
-  PRAYER = 'prayer'
+  PRAYER = 'prayer',
+  SETTINGS = 'settings',
 }
