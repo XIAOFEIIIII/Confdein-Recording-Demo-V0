@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { AppTab, JournalEntry, Devotional, PrayerRequest, CurrentUserId } from './types';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { AppTab, JournalEntry, Devotional, PrayerRequest, CurrentUserId, PrayerReminderSettings } from './types';
 import JournalTimeline from './components/JournalTimeline';
 import WeekTimeline from './components/WeekTimeline';
 import StressDashboard from './components/StressDashboard';
@@ -11,8 +11,10 @@ import ImmersiveReader from './components/ImmersiveReader';
 import EntryEditor from './components/EntryEditor';
 import DevotionalSection from './components/DevotionalSection';
 import Settings from './components/Settings';
-import { getStoredUserId, setStoredUserId, getInitialDataForUser, getAvatarSrc, getDevotionalForUserAndDate } from './data/userData';
+import PrayerReminderBanner from './components/PrayerReminderBanner';
+import { getStoredUserId, setStoredUserId, getInitialDataForUser, getAvatarSrc, getDevotionalForUserAndDate, getPrayerReminderSettings, setPrayerReminderSettings, getPrayerCompletionRecord, setPrayerCompletionRecord } from './data/userData';
 import { analyzeJournalEntry, generatePersonalizedDevotional } from './services/geminiService';
+import { fetchVerseText } from './services/bibleService';
 import { Search, Settings as SettingsIcon, Plus, Trash2, ChevronRight } from 'lucide-react';
 import { subDays, subHours, format, startOfWeek, addDays, startOfDay, isToday } from 'date-fns';
 
@@ -26,11 +28,30 @@ const FALLBACK_VERSES: Array<{ verse: string; reference: string }> = [
 function getInitialState() {
   const userId = getStoredUserId();
   const data = getInitialDataForUser(userId);
+  
+  // 初始化 verseList：只保留来自 entries 的 scripture
+  const entryVerses: Array<{ verse: string; reference: string; entryId: string; source: 'journal' }> = [];
+  const seenReferences = new Set<string>();
+  
+  data.entries.forEach(entry => {
+    if (entry.scripture && !seenReferences.has(entry.scripture)) {
+      entryVerses.push({
+        verse: '',
+        reference: entry.scripture,
+        entryId: entry.id,
+        source: 'journal',
+      });
+      seenReferences.add(entry.scripture);
+    }
+  });
+  
+  const verseList = entryVerses.slice(0, 20);
+  
   return {
     currentUser: userId,
     entries: data.entries,
     devotional: data.devotional,
-    verseList: data.verses.slice(0, 6),
+    verseList: verseList,
     versePool: data.verses,
     avatarSeed: data.avatarSeed,
     avatarUrl: data.avatarUrl,
@@ -47,9 +68,13 @@ const App: React.FC = () => {
   const [avatarSeed, setAvatarSeed] = useState<string>(initial.avatarSeed);
   const [avatarUrl, setAvatarUrl] = useState<string | undefined>(initial.avatarUrl);
   const [isLoadingDevo, setIsLoadingDevo] = useState(false);
-  const [verseList, setVerseList] = useState<Array<{ verse: string; reference: string }>>(initial.verseList);
+  const [generatingDevotionalForDate, setGeneratingDevotionalForDate] = useState<string | null>(null);
+  const [verseList, setVerseList] = useState<Array<{ verse: string; reference: string; entryId?: string; source?: 'journal' }>>(initial.verseList);
   const [versePool, setVersePool] = useState<Array<{ verse: string; reference: string }>>(initial.versePool);
   const [userPrayerRequests, setUserPrayerRequests] = useState<PrayerRequest[]>([]);
+  const [prayerReminderSettings, setPrayerReminderSettingsState] = useState<PrayerReminderSettings>(() => getPrayerReminderSettings(initial.currentUser));
+  const [activeReminderSlotId, setActiveReminderSlotId] = useState<string | null>(null);
+  const [dismissedReminderSlotId, setDismissedReminderSlotId] = useState<string | null>(null);
 
   // Week timeline: default focus on 2026-01-25 (Sunday = index 0 in that week)
   const defaultFocusDate = new Date(2026, 0, 25); // Jan 25, 2026
@@ -78,11 +103,27 @@ const App: React.FC = () => {
     const data = getInitialDataForUser(currentUser);
     setEntries(data.entries);
     setDevotional(data.devotional);
-    setVerseList(data.verses.slice(0, 6));
+    
+    // verseList：只保留来自 entries 的 scripture
+    const entryVerses: Array<{ verse: string; reference: string; entryId: string; source: 'journal' }> = [];
+    const seenRefs = new Set<string>();
+    data.entries.forEach(entry => {
+      if (entry.scripture && !seenRefs.has(entry.scripture)) {
+        entryVerses.push({
+          verse: '',
+          reference: entry.scripture,
+          entryId: entry.id,
+          source: 'journal',
+        });
+        seenRefs.add(entry.scripture);
+      }
+    });
+    setVerseList(entryVerses.slice(0, 20));
     setVersePool(data.verses);
     setAvatarSeed(data.avatarSeed);
     setAvatarUrl(data.avatarUrl);
     setUserPrayerRequests([]);
+    setPrayerReminderSettingsState(getPrayerReminderSettings(currentUser));
     // Only move week/day to latest entry when user has explicitly switched (so initial load keeps default 1/25)
     if (hasUserSwitchedRef.current) {
       if (data.entries.length > 0) {
@@ -109,18 +150,56 @@ const App: React.FC = () => {
   const [editingEntry, setEditingEntry] = useState<JournalEntry | null>(null);
   const [newPrayerName, setNewPrayerName] = useState('');
   const [newPrayerRequest, setNewPrayerRequest] = useState('');
+  const [newPrayerTerm, setNewPrayerTerm] = useState<'short' | 'long'>('short');
+
+  /** Simulate ring biometric detection: HRV, heart rate variability, stress level -> moodLevel 1-5 */
+  const detectMoodFromBiometrics = (timestamp: number): MoodLevel => {
+    // Use timestamp as seed for deterministic but varied results
+    const hour = new Date(timestamp).getHours();
+    const dayOfYear = Math.floor((timestamp - new Date(2026, 0, 1).getTime()) / (1000 * 60 * 60 * 24));
+    const seed = (hour * 7 + dayOfYear * 11) % 100;
+    
+    // Simulate HRV-based mood: higher HRV (lower stress) = better mood
+    // Morning (6-9): often lower mood (1-3), midday (10-14): mixed (2-4), evening (15-21): better (3-5)
+    let baseMood: number;
+    if (hour >= 6 && hour < 10) {
+      baseMood = 1 + (seed % 3); // 1-3
+    } else if (hour >= 10 && hour < 15) {
+      baseMood = 2 + (seed % 3); // 2-4
+    } else if (hour >= 15 && hour < 22) {
+      baseMood = 3 + (seed % 3); // 3-5
+    } else {
+      baseMood = 2 + (seed % 2); // 2-3 (late night/early morning)
+    }
+    
+    return Math.max(1, Math.min(5, baseMood)) as MoodLevel;
+  };
 
   const handleNewRecord = async (transcript: string) => {
     const newId = Math.random().toString(36).substr(2, 9);
+    const timestamp = Date.now();
     setIsProcessingRecording(true);
     analyzeJournalEntry(transcript).then(analysis => {
+      const prayerRequests: PrayerRequest[] | undefined =
+        analysis.prayerRequests?.length
+          ? analysis.prayerRequests.map((pr, i) => ({
+              id: `pr-${newId}-${i}`,
+              personName: pr.personName,
+              request: pr.request,
+              status: 'active' as const,
+              createdAt: timestamp,
+              term: 'short' as const,
+            }))
+          : undefined;
       const newEntry: JournalEntry = {
         id: newId,
-        timestamp: Date.now(),
+        timestamp,
         transcript,
         summary: analysis.summary || "Recorded a thought.",
         keywords: analysis.keywords || [],
         mood: analysis.mood as any,
+        moodLevel: detectMoodFromBiometrics(timestamp), // Auto-detect from ring biometrics
+        ...(prayerRequests && { prayerRequests }),
       };
       setEntries(prev => [newEntry, ...prev]);
       setIsProcessingRecording(false);
@@ -130,6 +209,7 @@ const App: React.FC = () => {
 
   const handleStopRecording = () => {
     setShowImmersiveRecording(false);
+    setIsProcessingRecording(true);
     // Simulate processing and generate transcript
     setTimeout(() => {
       const dummyTranscripts = [
@@ -156,25 +236,133 @@ const App: React.FC = () => {
     }
   }, [entries]);
 
+  const handleUnlockDevotional = useCallback(async (dateKey: string) => {
+    // Get entries for the specific date
+    const dayEntries = entries.filter((entry) => {
+      const entryDateKey = format(new Date(entry.timestamp), 'yyyy-MM-dd');
+      return entryDateKey === dateKey;
+    });
+    
+    // Set generating state
+    setGeneratingDevotionalForDate(dateKey);
+    
+    // TODO: Generate devotional based on dayEntries
+    // For now, just simulate - in the future, call generatePersonalizedDevotional(dayEntries)
+    console.log(`Unlocking devotional for ${dateKey} with ${dayEntries.length} entries`);
+    
+    // Simulate generation delay
+    await new Promise(resolve => setTimeout(resolve, 2000));
+    
+    // Clear generating state
+    setGeneratingDevotionalForDate(null);
+    
+    // Navigate to devotional tab
+    setActiveTab(AppTab.DEVOTIONAL);
+    
+    // Optionally, update selected date to match the unlocked date
+    const targetDate = new Date(dateKey + 'T12:00:00');
+    const targetWeekStart = startOfWeek(targetDate, { weekStartsOn: 0 });
+    const targetDayIndex = Math.floor((targetDate.getTime() - targetWeekStart.getTime()) / (1000 * 60 * 60 * 24));
+    setSelectedWeekStart(targetWeekStart);
+    setSelectedDayIndex(targetDayIndex);
+  }, [entries]);
+
   useEffect(() => {
     if (activeTab === AppTab.DEVOTIONAL && !devotional) {
       loadDevotional();
     }
   }, [activeTab, devotional, loadDevotional]);
 
-  // Note: Verse sub-tab uses a local verse list (no refresh button).
-
-  // When we get a new devotional, prepend its verse into the verse list (dedup by reference+verse)
+  // Prayer reminder check logic
   useEffect(() => {
-    if (!devotional) return;
-    const next = { verse: devotional.verse, reference: devotional.reference };
-    setVerseList((prev) => {
-      const key = `${next.reference}::${next.verse}`;
-      const seen = new Set(prev.map((v) => `${v.reference}::${v.verse}`));
-      if (seen.has(key)) return prev;
-      return [next, ...prev].slice(0, 6);
-    });
-  }, [devotional]);
+    if (!prayerReminderSettings || !prayerReminderSettings.enabled) {
+      setActiveReminderSlotId(null);
+      return;
+    }
+
+    const checkReminderTime = () => {
+      const now = new Date();
+      const today = format(now, 'yyyy-MM-dd');
+      const completionRecord = getPrayerCompletionRecord(currentUser, today);
+      const completedSlots = completionRecord?.completedSlots || [];
+
+      // Check if current time matches any enabled slot
+      const matchingSlot = prayerReminderSettings.timeSlots.find(slot => {
+        if (!slot.enabled) return false;
+        if (completedSlots.includes(slot.id)) return false;
+        if (dismissedReminderSlotId === slot.id) return false;
+        return now.getHours() === slot.hour && now.getMinutes() === slot.minute;
+      });
+
+      if (matchingSlot) {
+        setActiveReminderSlotId(matchingSlot.id);
+      } else {
+        // Clear reminder if time has passed
+        if (activeReminderSlotId) {
+          const activeSlot = prayerReminderSettings.timeSlots.find(s => s.id === activeReminderSlotId);
+          if (activeSlot) {
+            const nowMinutes = now.getHours() * 60 + now.getMinutes();
+            const slotMinutes = activeSlot.hour * 60 + activeSlot.minute;
+            if (nowMinutes > slotMinutes) {
+              setActiveReminderSlotId(null);
+              setDismissedReminderSlotId(null);
+            }
+          }
+        }
+      }
+    };
+
+    // Check immediately
+    checkReminderTime();
+
+    // Check every minute
+    const interval = setInterval(checkReminderTime, 60000);
+
+    return () => clearInterval(interval);
+  }, [prayerReminderSettings, currentUser, activeReminderSlotId, dismissedReminderSlotId]);
+
+  // Reset dismissed reminder when date changes
+  useEffect(() => {
+    const today = format(new Date(), 'yyyy-MM-dd');
+    const checkDateChange = () => {
+      const currentDate = format(new Date(), 'yyyy-MM-dd');
+      if (currentDate !== today) {
+        setDismissedReminderSlotId(null);
+        setActiveReminderSlotId(null);
+      }
+    };
+    const interval = setInterval(checkDateChange, 60000); // Check every minute
+    return () => clearInterval(interval);
+  }, []);
+
+  const handleReminderComplete = () => {
+    if (!activeReminderSlotId) return;
+    
+    const today = format(new Date(), 'yyyy-MM-dd');
+    const completionRecord = getPrayerCompletionRecord(currentUser, today) || {
+      date: today,
+      completedSlots: [],
+      completedAt: {},
+    };
+
+    if (!completionRecord.completedSlots.includes(activeReminderSlotId)) {
+      completionRecord.completedSlots.push(activeReminderSlotId);
+      completionRecord.completedAt[activeReminderSlotId] = Date.now();
+      setPrayerCompletionRecord(currentUser, completionRecord);
+    }
+
+    setActiveReminderSlotId(null);
+    setDismissedReminderSlotId(null);
+  };
+
+  const handleReminderDismiss = () => {
+    if (activeReminderSlotId) {
+      setDismissedReminderSlotId(activeReminderSlotId);
+      setActiveReminderSlotId(null);
+    }
+  };
+
+  // Note: Verse sub-tab uses a local verse list. Only verses from journal entries (and manual) are shown; devotional verses are not added.
 
   const allPrayerRequestsFromEntries: PrayerRequest[] = entries
     .flatMap((e) => e.prayerRequests ?? [])
@@ -205,6 +393,32 @@ const App: React.FC = () => {
     setEntries((prev) =>
       prev.map((entry) => (entry.id === updatedEntry.id ? updatedEntry : entry))
     );
+    
+    // 自动聚合 scripture 到 Verse tab
+    if (updatedEntry.scripture) {
+      setVerseList((prev) => {
+        const reference = updatedEntry.scripture!;
+        const seen = new Set(prev.map((v) => v.reference));
+        if (seen.has(reference)) {
+          // 如果已存在，更新 entryId 和 source（保留最新的 entry）
+          return prev.map((v) => 
+            v.reference === reference ? { ...v, entryId: updatedEntry.id, source: 'journal' as const } : v
+          );
+        }
+        
+        // 添加到列表开头，限制最多显示 20 条
+        return [{
+          verse: '', // Entry 中只有 reference，没有 verse 文本
+          reference: reference,
+          entryId: updatedEntry.id, // 保存来源 entry 的 ID
+          source: 'journal' as const,
+        }, ...prev].slice(0, 20);
+      });
+    }
+  };
+
+  const handleEntryDelete = (entryId: string) => {
+    setEntries((prev) => prev.filter((entry) => entry.id !== entryId));
   };
 
   const addPrayerRequest = () => {
@@ -219,6 +433,7 @@ const App: React.FC = () => {
         request,
         status: 'active',
         createdAt: Date.now(),
+        term: newPrayerTerm,
       },
     ]);
     setNewPrayerName('');
@@ -238,10 +453,28 @@ const App: React.FC = () => {
     return format(selectedDate, 'MMMM d');
   };
 
+  // Get active reminder slot info
+  const activeReminderSlot = activeReminderSlotId
+    ? prayerReminderSettings?.timeSlots.find(s => s.id === activeReminderSlotId)
+    : null;
+  const today = format(new Date(), 'yyyy-MM-dd');
+  const completionRecord = getPrayerCompletionRecord(currentUser, today);
+  const enabledSlots = prayerReminderSettings?.timeSlots.filter(slot => slot.enabled) || [];
+  const completedCount = completionRecord?.completedSlots.length || 0;
+  const totalCount = enabledSlots.length;
+
   return (
     <div className="fixed inset-0 bg-[#fbfbfa] selection:bg-[#4a3a33] selection:text-[#fbfbfa] no-scrollbar overflow-hidden flex flex-col">
-      {/* Subtle Binding Shadow */}
-      <div className="absolute top-0 left-0 bottom-0 w-16 bg-gradient-to-r from-stone-900/[0.04] via-stone-900/[0.01] to-transparent pointer-events-none z-30" />
+      {/* Prayer Reminder Banner */}
+      {activeReminderSlot && (
+        <PrayerReminderBanner
+          slotLabel={activeReminderSlot.label}
+          slotTime={`${String(activeReminderSlot.hour).padStart(2, '0')}:${String(activeReminderSlot.minute).padStart(2, '0')}`}
+          onComplete={handleReminderComplete}
+          onDismiss={handleReminderDismiss}
+          currentProgress={{ completed: completedCount, total: totalCount }}
+        />
+      )}
       
       {!showMeditation && !showReader && !editingEntry && (
         <Navigation 
@@ -249,6 +482,8 @@ const App: React.FC = () => {
           setActiveTab={setActiveTab} 
           onRecordFinish={handleNewRecord}
           onStartRecording={() => setShowImmersiveRecording(true)}
+          isRecordingFromApp={showImmersiveRecording}
+          isProcessingFromApp={isProcessingRecording}
         />
       )}
 
@@ -302,10 +537,9 @@ const App: React.FC = () => {
           activeTab === AppTab.JOURNAL && journalSubTab !== 'journal'
             ? {
                 backgroundImage: `
-                  linear-gradient(90deg, transparent 32px, #d8b9b0 32px, #d8b9b0 33px, transparent 33px),
                   repeating-linear-gradient(#fbfbfa, #fbfbfa 31px, #e9e8e6 31px, #e9e8e6 32px)
                 `,
-                backgroundSize: '100% 100%, 100% 32px',
+                backgroundSize: '100% 32px',
                 backgroundAttachment: 'local',
                 backgroundPosition: '0 0'
               }
@@ -327,6 +561,9 @@ const App: React.FC = () => {
                   scrollToDayIndex={selectedDayIndex}
                   onPageChange={setSelectedDayIndex}
                   useRomanFont={currentUser === 'roman'}
+                  onUnlockDevotional={handleUnlockDevotional}
+                  generatingDevotionalForDate={generatingDevotionalForDate}
+                  onNavigateToVerse={() => setJournalSubTab('verse')}
                 />
               </div>
             )}
@@ -338,6 +575,47 @@ const App: React.FC = () => {
                   const isRoman = currentUser === 'roman';
                   const prayerMain = isRoman ? 'text-[17px]' : 'text-[15px]';
                   const prayerSecondary = isRoman ? 'text-[15px]' : 'text-[13px]';
+                  
+                  // Calculate prayer reminder progress
+                  const today = format(new Date(), 'yyyy-MM-dd');
+                  const completionRecord = getPrayerCompletionRecord(currentUser, today);
+                  const enabledSlots = prayerReminderSettings?.timeSlots.filter(slot => slot.enabled) || [];
+                  const completedCount = completionRecord?.completedSlots.length || 0;
+                  const totalCount = enabledSlots.length;
+                  
+                  const shortTerm = displayedPrayerRequests.filter((pr) => (pr.term ?? 'short') === 'short');
+                  const longTerm = displayedPrayerRequests.filter((pr) => pr.term === 'long');
+                  const renderPrayerItem = (pr: PrayerRequest) => (
+                    <div
+                      key={pr.id}
+                      className="group flex items-start gap-3"
+                      style={{ marginBottom: '32px' }}
+                    >
+                      <div className="flex-1 min-w-0">
+                        <p
+                          className={`handwriting ${prayerSecondary} text-[#4a3a33]/45`}
+                          style={{ height: '32px', lineHeight: '32px', margin: 0, padding: 0, display: 'block' }}
+                        >
+                          {pr.personName}
+                        </p>
+                        <p
+                          className={`handwriting text-[#4a3a33] ${prayerMain} opacity-90`}
+                          style={{ lineHeight: '32px', margin: 0, padding: 0, display: 'block', minHeight: '32px' }}
+                        >
+                          {pr.request}
+                        </p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => removePrayerRequest(pr)}
+                        className="flex-shrink-0 p-2 text-[#4a3a33]/35 hover:text-[#4a3a33] hover:bg-[#4a3a33]/5 rounded-full transition-colors opacity-50 group-hover:opacity-100 mt-0"
+                        style={{ marginTop: 0 }}
+                        aria-label="Remove"
+                      >
+                        <Trash2 size={14} />
+                      </button>
+                    </div>
+                  );
                   return (
                     <>
                 {/* Row 1: Add request label + button — exactly 32px */}
@@ -357,6 +635,23 @@ const App: React.FC = () => {
                   >
                     <Plus size={14} />
                     Add
+                  </button>
+                </div>
+                {/* Term selector: Short-term / Long-term */}
+                <div className="flex gap-3" style={{ height: '28px', marginTop: '4px', marginBottom: '0' }}>
+                  <button
+                    type="button"
+                    onClick={() => setNewPrayerTerm('short')}
+                    className={`text-[10px] font-bold uppercase tracking-[0.2em] transition-colors ${newPrayerTerm === 'short' ? 'text-[#4a3a33]' : 'text-[#4a3a33]/50 hover:text-[#4a3a33]/70'}`}
+                  >
+                    Short-term
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setNewPrayerTerm('long')}
+                    className={`text-[10px] font-bold uppercase tracking-[0.2em] transition-colors ${newPrayerTerm === 'long' ? 'text-[#4a3a33]' : 'text-[#4a3a33]/50 hover:text-[#4a3a33]/70'}`}
+                  >
+                    Long-term
                   </button>
                 </div>
                 {/* Row 2: Name input — exactly 32px */}
@@ -389,39 +684,22 @@ const App: React.FC = () => {
                   </p>
                 ) : (
                   <div>
-                    {displayedPrayerRequests.map((pr) => (
-                      <div
-                        key={pr.id}
-                        className="group flex items-start gap-3"
-                        style={{ marginBottom: '32px' }}
-                      >
-                        <div className="flex-1 min-w-0">
-                          {/* Person name — exactly 32px row */}
-                          <p
-                            className={`handwriting ${prayerSecondary} text-[#4a3a33]/45`}
-                            style={{ height: '32px', lineHeight: '32px', margin: 0, padding: 0, display: 'block' }}
-                          >
-                            {pr.personName}
-                          </p>
-                          {/* Request — 32px line height, aligns to grid */}
-                          <p
-                            className={`handwriting text-[#4a3a33] ${prayerMain} opacity-90`}
-                            style={{ lineHeight: '32px', margin: 0, padding: 0, display: 'block', minHeight: '32px' }}
-                          >
-                            {pr.request}
-                          </p>
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => removePrayerRequest(pr)}
-                          className="flex-shrink-0 p-2 text-[#4a3a33]/35 hover:text-[#4a3a33] hover:bg-[#4a3a33]/5 rounded-full transition-colors opacity-50 group-hover:opacity-100 mt-0"
-                          style={{ marginTop: 0 }}
-                          aria-label="Remove"
-                        >
-                          <Trash2 size={14} />
-                        </button>
-                      </div>
-                    ))}
+                    <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-[#4a3a33]/45" style={{ marginBottom: '12px' }}>
+                      Short-term
+                    </p>
+                    {shortTerm.length === 0 ? (
+                      <p className={`handwriting text-[#4a3a33]/40 ${prayerSecondary}`} style={{ marginBottom: '24px' }}>No short-term requests.</p>
+                    ) : (
+                      shortTerm.map(renderPrayerItem)
+                    )}
+                    <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-[#4a3a33]/45" style={{ marginTop: '8px', marginBottom: '12px' }}>
+                      Long-term
+                    </p>
+                    {longTerm.length === 0 ? (
+                      <p className={`handwriting text-[#4a3a33]/40 ${prayerSecondary}`}>No long-term requests.</p>
+                    ) : (
+                      longTerm.map(renderPrayerItem)
+                    )}
                   </div>
                 )}
                     </>
@@ -438,43 +716,23 @@ const App: React.FC = () => {
                   const verseRef = isRoman ? 'text-[15px]' : 'text-[13px]';
                   return (
                     <>
-                <div className="flex items-center justify-between" style={{ height: '32px', marginBottom: '32px' }}>
-                  <button
-                    onClick={() => {
-                      setVerseList((prev) => {
-                        if (versePool.length === 0) return prev;
-                        const next = versePool[Math.floor(Math.random() * versePool.length)];
-                        const key = `${next.reference}::${next.verse}`;
-                        const seen = new Set(prev.map((v) => `${v.reference}::${v.verse}`));
-                        if (seen.has(key)) return prev;
-                        return [next, ...prev].slice(0, 6);
-                      });
-                    }}
-                    className="text-[10px] font-bold uppercase tracking-[0.25em] text-[#4a3a33]/70 hover:text-[#4a3a33] transition-colors"
-                  >
-                    Add verse
-                  </button>
-                </div>
-
-                <div>
-                  {verseList.map((v, i) => (
-                    <div key={`${v.reference}-${i}`} className="block" style={{ marginBottom: '32px' }}>
-                      <p
-                        className={`handwriting text-[#4a3a33] ${verseMain} opacity-90`}
-                        style={{ lineHeight: '32px', margin: 0, padding: 0, display: 'block', minHeight: '32px' }}
-                      >
-                        "{v.verse}"
-                      </p>
-                      <p
-                        className={`handwriting text-[#4a3a33]/45 ${verseRef}`}
-                        style={{ lineHeight: '32px', margin: 0, padding: 0, display: 'block', minHeight: '32px' }}
-                      >
-                        — {v.reference}
-                      </p>
-                      <div style={{ height: '32px' }} />
-                    </div>
-                  ))}
-                </div>
+                <VerseListWithFetch
+                  verses={verseList.filter((v) => v.source === 'journal')}
+                  entries={entries}
+                  verseMain={verseMain}
+                  verseRef={verseRef}
+                  onNavigateToEntry={(entry) => {
+                    setJournalSubTab('journal');
+                    handleEntryClick(entry);
+                  }}
+                  onVerseUpdate={(reference, verseText) => {
+                    setVerseList((prev) =>
+                      prev.map((v) =>
+                        v.reference === reference ? { ...v, verse: verseText } : v
+                      )
+                    );
+                  }}
+                />
                     </>
                   );
                 })()}
@@ -490,7 +748,15 @@ const App: React.FC = () => {
             )}
 
             {activeTab === AppTab.SETTINGS && (
-              <Settings currentUser={currentUser} onSwitchUser={handleSwitchUser} />
+              <Settings 
+                currentUser={currentUser} 
+                onSwitchUser={handleSwitchUser}
+                prayerReminderSettings={prayerReminderSettings}
+                onUpdatePrayerReminderSettings={(settings) => {
+                  setPrayerReminderSettingsState(settings);
+                  setPrayerReminderSettings(currentUser, settings);
+                }}
+              />
             )}
 
             {activeTab === AppTab.DEVOTIONAL && (
@@ -609,10 +875,112 @@ const App: React.FC = () => {
         <EntryEditor
           entry={editingEntry}
           onSave={handleEntrySave}
+          onDelete={handleEntryDelete}
           onClose={() => setEditingEntry(null)}
           usePatrickHand={currentUser === 'roman'}
         />
       )}
+    </div>
+  );
+};
+
+// Verse List Component with Auto-fetch
+interface VerseListWithFetchProps {
+  verses: Array<{ verse: string; reference: string; entryId?: string; source?: 'journal' }>;
+  entries: JournalEntry[];
+  verseMain: string;
+  verseRef: string;
+  onNavigateToEntry: (entry: JournalEntry) => void;
+  onVerseUpdate: (reference: string, verseText: string) => void;
+}
+
+const VerseListWithFetch: React.FC<VerseListWithFetchProps> = ({
+  verses,
+  entries,
+  verseMain,
+  verseRef,
+  onNavigateToEntry,
+  onVerseUpdate,
+}) => {
+  // Track which verses are being fetched
+  const [fetchingVerses, setFetchingVerses] = useState<Set<string>>(new Set());
+  const [fetchedVerses, setFetchedVerses] = useState<Set<string>>(new Set());
+
+  // Find verses that need fetching (have reference but no verse text)
+  const versesToFetch = useMemo(() => {
+    return verses.filter(v => !v.verse && v.reference && !fetchedVerses.has(v.reference));
+  }, [verses, fetchedVerses]);
+
+  // Fetch verse texts for verses that need them
+  useEffect(() => {
+    if (versesToFetch.length === 0) return;
+
+    versesToFetch.forEach(async (v) => {
+      if (fetchingVerses.has(v.reference)) return;
+      
+      setFetchingVerses(prev => new Set(prev).add(v.reference));
+      
+      try {
+        const verseText = await fetchVerseText(v.reference);
+        if (verseText) {
+          onVerseUpdate(v.reference, verseText);
+        }
+        setFetchedVerses(prev => new Set(prev).add(v.reference));
+      } catch (error) {
+        console.error(`Failed to fetch verse for ${v.reference}:`, error);
+        setFetchedVerses(prev => new Set(prev).add(v.reference));
+      } finally {
+        setFetchingVerses(prev => {
+          const next = new Set(prev);
+          next.delete(v.reference);
+          return next;
+        });
+      }
+    });
+  }, [versesToFetch, fetchingVerses, onVerseUpdate]);
+
+  return (
+    <div>
+      {verses.map((v, i) => {
+        const sourceEntry = v.entryId ? entries.find(e => e.id === v.entryId) : null;
+        const sourceLabel = 'Journal';
+        const isFetching = fetchingVerses.has(v.reference);
+        
+        return (
+          <div key={`${v.reference}-${i}`} className="block group" style={{ marginBottom: '32px' }}>
+            <p
+              className={`handwriting text-[#4a3a33] ${verseMain} opacity-90`}
+              style={{ lineHeight: '32px', margin: 0, padding: 0, display: 'block', minHeight: '32px' }}
+            >
+              {v.verse ? `"${v.verse}"` : isFetching ? 'Loading...' : v.reference}
+            </p>
+            {v.verse && (
+              <p
+                className={`handwriting text-[#4a3a33]/45 ${verseRef}`}
+                style={{ lineHeight: '32px', margin: 0, padding: 0, display: 'block', minHeight: '32px' }}
+              >
+                — {v.reference}
+              </p>
+            )}
+            <div className="flex items-center gap-2 mt-1" style={{ lineHeight: '24px' }}>
+              <span className="text-[9px] text-[#4a3a33]/40 uppercase tracking-wider">
+                {sourceLabel}
+              </span>
+              {sourceEntry && (
+                <button
+                  onClick={() => {
+                    onNavigateToEntry(sourceEntry);
+                  }}
+                  className="text-[10px] text-[#4a3a33]/50 hover:text-[#4a3a33]/70 transition-colors opacity-60 group-hover:opacity-100 cursor-pointer"
+                >
+                  ← View entry
+                </button>
+              )}
+            </div>
+            <div style={{ height: '32px' }} />
+          </div>
+        );
+      })}
     </div>
   );
 };

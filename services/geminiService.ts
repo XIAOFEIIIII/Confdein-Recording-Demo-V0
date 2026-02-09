@@ -12,14 +12,14 @@ export const analyzeJournalEntry = async (text: string): Promise<Partial<Journal
     // Fallback if API key is not configured
     return { 
       summary: "Journal recorded.", 
-      keywords: text.split(' ').slice(0, 3), 
+      keywords: [], // No auto-generated keywords
       mood: 'peaceful' 
     };
   }
   
   const response = await ai.models.generateContent({
     model: 'gemini-3-flash-preview',
-    contents: `Analyze this voice journal entry. Extract key themes, a 1-sentence summary, keywords, and any prayer requests mentioned (identify names and specific needs). 
+    contents: `Analyze this voice journal entry. Extract key themes, a 1-sentence summary, and any prayer requests mentioned (identify names and specific needs). Do NOT generate keywords - users will add their own tags.
     Entry: "${text}"`,
     config: {
       responseMimeType: "application/json",
@@ -27,7 +27,6 @@ export const analyzeJournalEntry = async (text: string): Promise<Partial<Journal
         type: Type.OBJECT,
         properties: {
           summary: { type: Type.STRING },
-          keywords: { type: Type.ARRAY, items: { type: Type.STRING } },
           mood: { type: Type.STRING, description: "One of: peaceful, anxious, grateful, heavy, hopeful" },
           prayerRequests: {
             type: Type.ARRAY,
@@ -41,7 +40,7 @@ export const analyzeJournalEntry = async (text: string): Promise<Partial<Journal
             }
           }
         },
-        required: ["summary", "keywords", "mood"]
+        required: ["summary", "mood"]
       }
     }
   });
@@ -49,7 +48,9 @@ export const analyzeJournalEntry = async (text: string): Promise<Partial<Journal
   try {
     // Fix: Directly access the .text property as per guidelines
     const resultText = response.text || '{}';
-    return JSON.parse(resultText.trim());
+    const result = JSON.parse(resultText.trim());
+    // Always return empty keywords array - users add tags manually
+    return { ...result, keywords: [] };
   } catch (e) {
     console.error("Failed to parse AI response", e);
     return { summary: "Journal recorded.", keywords: [], mood: 'peaceful' };

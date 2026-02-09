@@ -1,4 +1,4 @@
-import { JournalEntry, Devotional, PrayerRequest } from '../types';
+import { JournalEntry, Devotional, PrayerRequest, PrayerReminderSettings, PrayerCompletionRecord } from '../types';
 import { subDays, subHours } from 'date-fns';
 import type { CurrentUserId, UserProfile } from '../types';
 
@@ -14,14 +14,33 @@ export interface UserInitialData {
   avatarUrl?: string;
 }
 
+/** Simulate ring biometric detection for existing entries based on timestamp */
+const detectMoodFromTimestamp = (timestamp: number): MoodLevel => {
+  const hour = new Date(timestamp).getHours();
+  const dayOfYear = Math.floor((timestamp - new Date(2026, 0, 1).getTime()) / (1000 * 60 * 60 * 24));
+  const seed = (hour * 7 + dayOfYear * 11) % 100;
+  let baseMood: number;
+  if (hour >= 6 && hour < 10) {
+    baseMood = 1 + (seed % 3);
+  } else if (hour >= 10 && hour < 15) {
+    baseMood = 2 + (seed % 3);
+  } else if (hour >= 15 && hour < 22) {
+    baseMood = 3 + (seed % 3);
+  } else {
+    baseMood = 2 + (seed % 2);
+  }
+  return Math.max(1, Math.min(5, baseMood)) as MoodLevel;
+};
+
 const ERICA_ENTRIES: JournalEntry[] = [
   {
     id: 'entry-1',
     timestamp: now - 1000 * 60 * 30,
     transcript: "Jesus and sexual purity\n\nJesus took the issue of sexual purity further when he said that anyone who even looks at a woman with lust has already committed adultery in his heart. Similarly, we should avoid entertaining or fantasizing about what God has forbidden.\n\nLove fulfills the requirements of the commandments.",
     summary: "Jesus on purity and love fulfilling the law.",
-    keywords: ["purity", "lust", "love", "commandments"],
+    keywords: ["sermon notes"],
     mood: 'peaceful',
+    moodLevel: detectMoodFromTimestamp(now - 1000 * 60 * 30),
     scripture: 'Lev 18:5, 20',
   },
   {
@@ -29,8 +48,9 @@ const ERICA_ENTRIES: JournalEntry[] = [
     timestamp: now - 1000 * 60 * 60 * 3,
     transcript: "Respect for the elderly\n\nPeople often find it easy to dismiss the opinions of the elderly and avoid taking time to visit with them. But the fact that God commanded the Israelites to show respect for the elderly shows how seriously we should take the responsibility of respecting those older than we are. Their wisdom gained from experience can save us from many pitfalls.",
     summary: "Honoring the elderly and valuing their wisdom.",
-    keywords: ["elderly", "respect", "wisdom", "honor"],
+    keywords: [],
     mood: 'hopeful',
+    moodLevel: detectMoodFromTimestamp(now - 1000 * 60 * 60 * 3),
     scripture: 'Lev 19:32',
     prayerRequests: [
       {
@@ -39,6 +59,7 @@ const ERICA_ENTRIES: JournalEntry[] = [
         request: 'Help me visit and honor my elders with patience and listen to their wisdom.',
         status: 'active',
         createdAt: now - 1000 * 60 * 60 * 2,
+        term: 'long',
       },
     ],
   },
@@ -47,8 +68,9 @@ const ERICA_ENTRIES: JournalEntry[] = [
     timestamp: subHours(now, 24).getTime(),
     transcript: "Child sacrifice\n\nSacrificing children to the gods was a common practice in ancient religions. The Ammonites, Israel's neighbors, made child sacrifices to Molech (their national god) as part of their religion. They and other surrounding pagan nations saw their children as the greatest gift they could offer to ward off evil or appease angry gods. God made it clear that this practice was detestable and strictly forbidden. In Old Testament times, just as today, His character made human sacrifice unthinkable.\n\nUnlike the pagan gods, He is a God of love, who does not need to be appeased.\nHe is a God of life, who prohibits murder and encourages practices that lead to health and happiness.\nHe is a God of the helpless, who shows special concern for children.\nHe is a God of unselfishness, who, instead of demanding human sacrifices, sacrificed Himself for us.",
     summary: "God's character versus pagan sacrifice; His care for the helpless.",
-    keywords: ["sacrifice", "Molech", "children", "God's character"],
+    keywords: ["sermon notes"],
     mood: 'grateful',
+    moodLevel: detectMoodFromTimestamp(subHours(now, 24).getTime()),
     scripture: 'Lev 18:21; 20:2–5',
   },
   {
@@ -56,8 +78,9 @@ const ERICA_ENTRIES: JournalEntry[] = [
     timestamp: subHours(now, 26).getTime(), // Jan 25 ~19:00
     transcript: "Summarizing the law\n\nSome people think the Bible is nothing but a book of rules. But Jesus neatly summarized all these rules when he said to love God with all your heart, and to love your neighbor as yourself. He called these the greatest commandments (or rules) of all. By carrying out Jesus' simple commands, we find ourselves following all of God's other laws as well.",
     summary: "Jesus' summary: love God and love your neighbor.",
-    keywords: ["law", "commandments", "love", "Jesus"],
+    keywords: [],
     mood: 'peaceful',
+    moodLevel: detectMoodFromTimestamp(subHours(now, 26).getTime()),
     scripture: 'Lev 19:18',
   },
   {
@@ -65,8 +88,9 @@ const ERICA_ENTRIES: JournalEntry[] = [
     timestamp: subDays(now, 2).getTime(),
     transcript: "Foreigners and compassion\n\nHow do you feel when you encounter foreigners, especially those who don't speak your language? Are you impatient? Do you think or act as if they should go back to where they came from? Are you tempted to take advantage of them? God says to treat foreigners as you'd treat fellow citizens, to love them as you love yourself. In reality, we are all foreigners in this world because it is only our temporary home. View your interactions with strangers, newcomers, and foreigners as opportunities to demonstrate God's love.",
     summary: "Treating foreigners with compassion as God commands.",
-    keywords: ["foreigners", "compassion", "love", "strangers"],
+    keywords: [],
     mood: 'hopeful',
+    moodLevel: detectMoodFromTimestamp(subDays(now, 2).getTime()),
     scripture: 'Lev 19:33–34',
     prayerRequests: [
       {
@@ -75,6 +99,7 @@ const ERICA_ENTRIES: JournalEntry[] = [
         request: 'Give me a heart to welcome and love newcomers and foreigners as You do.',
         status: 'active',
         createdAt: subDays(now, 2).getTime() - 1000 * 60 * 60 * 2,
+        term: 'long',
       },
     ],
   },
@@ -83,8 +108,9 @@ const ERICA_ENTRIES: JournalEntry[] = [
     timestamp: subDays(now, 2).getTime() - 1000 * 60 * 60 * 3, // Jan 24 18:00
     transcript: "THE OCCULT\n\nEveryone is interested in what the future holds, and we often look to others for guidance. But God warned about looking to the occult for advice. Mediums and spiritists were outlawed because God was not the source of their information. At best, occult practitioners are fakes whose predictions cannot be trusted. At worst, they are in contact with evil spirits and are thus extremely dangerous. We don't need to look to the occult for information about the future. God has given us the Bible so that we may obtain all the information we need—the Bible's teachings are trustworthy.",
     summary: "Avoiding the occult; trusting Scripture for the future.",
-    keywords: ["occult", "mediums", "Bible", "future"],
+    keywords: ["sermon notes"],
     mood: 'peaceful',
+    moodLevel: detectMoodFromTimestamp(subDays(now, 2).getTime() - 1000 * 60 * 60 * 3),
     scripture: 'Lev 19:31; 20:6, 27',
   },
 ];
@@ -96,16 +122,18 @@ const ROMAN_ENTRIES: JournalEntry[] = [
     timestamp: new Date(2026, 0, 25, 18, 30).getTime(),
     transcript: "Sunday Service\n\nDoes more pleasure give more brokenness. More pleasure leads to wanting more. Never satisfied. Pleasure is a gift of grace that points us to eternity. We forget grace is something we don't deserve. We start working and think we deserve things.",
     summary: "Pleasure, grace, and deserving—Sunday service reflection.",
-    keywords: ["pleasure", "grace", "brokenness", "eternity", "deserving"],
+    keywords: ["sermon notes"],
     mood: 'heavy',
+    moodLevel: detectMoodFromTimestamp(new Date(2026, 0, 25, 18, 30).getTime()),
   },
   {
     id: 'roman-2',
     timestamp: new Date(2026, 0, 26, 20, 15).getTime(),
     transcript: "Woke up today and blessed the Lord. Went to the gym then went to work. The Lord has blessed me w/ a job. No christians in sight. The Lord has been helping me stop lying due to people pleasing. Anytime I get the urge to say a lie I get convicted. Praying the Lord helps me wake up sooner. Tired now so going to sleep. Lord heal my cough also.",
     summary: "Blessing the Lord, job, stopping lying, conviction, prayers for sleep and healing.",
-    keywords: ["blessing", "job", "lying", "people pleasing", "conviction", "healing"],
+    keywords: [],
     mood: 'grateful',
+    moodLevel: detectMoodFromTimestamp(new Date(2026, 0, 26, 20, 15).getTime()),
     prayerRequests: [
       {
         id: 'roman-pr-1',
@@ -113,6 +141,7 @@ const ROMAN_ENTRIES: JournalEntry[] = [
         request: 'Lord help me wake up sooner. Heal my cough.',
         status: 'active',
         createdAt: new Date(2026, 0, 26, 20, 0).getTime(),
+        term: 'short',
       },
     ],
   },
@@ -121,16 +150,18 @@ const ROMAN_ENTRIES: JournalEntry[] = [
     timestamp: new Date(2026, 0, 31, 21, 0).getTime(),
     transcript: "Went to a Christian event. Sang worship and heard testimonies. These people are famous yet still seek the Lord. Crazy people like that exist. God is so good! Got to meet them like Ahawty, Jack, BG, Athang , Tiff, KP. All cool people.",
     summary: "Christian event, worship, testimonies, famous people seeking the Lord.",
-    keywords: ["worship", "testimonies", "Christian event", "community"],
+    keywords: ["dream"],
     mood: 'grateful',
+    moodLevel: detectMoodFromTimestamp(new Date(2026, 0, 31, 21, 0).getTime()),
   },
   {
     id: 'roman-4',
     timestamp: new Date(2026, 1, 1, 22, 45).getTime(),
     transcript: "Sunday Service\n\nJesus tests us. He gives us things but not too easy so we need to rely on Him. As I pray I do not. Even if Jesus says NO keep praying. Mt 15:27 He could just be testing you to see if you want it bad enough.",
     summary: "Jesus tests us so we rely on Him; keep praying even if He says no.",
-    keywords: ["testing", "rely on God", "prayer", "persistence"],
+    keywords: ["sermon notes"],
     mood: 'hopeful',
+    moodLevel: detectMoodFromTimestamp(new Date(2026, 1, 1, 22, 45).getTime()),
     scripture: 'Mt 15:27',
   },
 ];
@@ -314,4 +345,82 @@ export function getInitialDataForUser(userId: CurrentUserId): UserInitialData {
     avatarSeed: u.avatarSeed,
     avatarUrl: u.avatarUrl,
   };
+}
+
+// Prayer Reminder Settings
+
+export function getDefaultPrayerReminderSettings(): PrayerReminderSettings {
+  return {
+    enabled: true,
+    timeSlots: [
+      { id: 'morning', label: 'Morning Prayer', hour: 7, minute: 0, enabled: true },
+      { id: 'evening', label: 'Evening Reflection', hour: 21, minute: 0, enabled: true },
+    ],
+  };
+}
+
+export function getPrayerReminderSettings(userId: CurrentUserId): PrayerReminderSettings {
+  try {
+    const key = `prayer_reminder_${userId}`;
+    const raw = localStorage.getItem(key);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      // 验证数据结构
+      if (parsed && typeof parsed.enabled === 'boolean' && Array.isArray(parsed.timeSlots)) {
+        // 迁移旧的中文标签到英文
+        const migrated = {
+          ...parsed,
+          timeSlots: parsed.timeSlots.map((slot: any) => {
+            if (slot.id === 'morning' && (slot.label === '晨祷' || slot.label === 'Morning Prayer')) {
+              return { ...slot, label: 'Morning Prayer' };
+            }
+            if (slot.id === 'evening' && (slot.label === '晚祷' || slot.label === 'Evening Reflection')) {
+              return { ...slot, label: 'Evening Reflection' };
+            }
+            return slot;
+          }),
+        };
+        // 如果标签有变化，保存迁移后的设置
+        const needsSave = parsed.timeSlots.some((slot: any, index: number) => 
+          slot.label !== migrated.timeSlots[index].label
+        );
+        if (needsSave) {
+          setPrayerReminderSettings(userId, migrated);
+        }
+        return migrated;
+      }
+    }
+  } catch (_) {}
+  // 如果不存在或解析失败，返回默认设置
+  return getDefaultPrayerReminderSettings();
+}
+
+export function setPrayerReminderSettings(userId: CurrentUserId, settings: PrayerReminderSettings): void {
+  try {
+    const key = `prayer_reminder_${userId}`;
+    localStorage.setItem(key, JSON.stringify(settings));
+  } catch (_) {}
+}
+
+// Prayer Completion Records
+
+export function getPrayerCompletionRecord(userId: CurrentUserId, date: string): PrayerCompletionRecord | null {
+  try {
+    const key = `prayer_completion_${userId}_${date}`;
+    const raw = localStorage.getItem(key);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (parsed && parsed.date === date && Array.isArray(parsed.completedSlots)) {
+        return parsed;
+      }
+    }
+  } catch (_) {}
+  return null;
+}
+
+export function setPrayerCompletionRecord(userId: CurrentUserId, record: PrayerCompletionRecord): void {
+  try {
+    const key = `prayer_completion_${userId}_${record.date}`;
+    localStorage.setItem(key, JSON.stringify(record));
+  } catch (_) {}
 }

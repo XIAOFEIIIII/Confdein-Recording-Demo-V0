@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { BookOpen, Activity, Square, Loader2, Mic, Moon } from 'lucide-react';
 import { AppTab } from '../types';
 
@@ -8,17 +8,37 @@ interface NavigationProps {
   setActiveTab: (tab: AppTab) => void;
   onRecordFinish: (transcript: string) => void;
   onStartRecording?: () => void;
+  /** When immersive recording is visible (from App). Used for status label. */
+  isRecordingFromApp?: boolean;
+  /** When transcript is being generated after stop (from App). Used for status label. */
+  isProcessingFromApp?: boolean;
 }
 
-const Navigation: React.FC<NavigationProps> = ({ activeTab, setActiveTab, onRecordFinish, onStartRecording }) => {
+const Navigation: React.FC<NavigationProps> = ({
+  activeTab,
+  setActiveTab,
+  onRecordFinish,
+  onStartRecording,
+  isRecordingFromApp = false,
+  isProcessingFromApp = false,
+}) => {
   const [isRecording, setIsRecording] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
+  const showListening = isRecordingFromApp ?? isRecording;
+  const showTranscribing = (isProcessingFromApp ?? isProcessing) && !showListening;
 
   const navItems = [
     { id: AppTab.JOURNAL, icon: BookOpen, label: 'Journal' },
     { id: AppTab.HEALTH, icon: Activity, label: 'Stress' },
     { id: AppTab.DEVOTIONAL, icon: Moon, label: 'Devo' },
   ];
+
+  // Sync internal state when App state changes (e.g. immersive recording closed)
+  useEffect(() => {
+    if (!isRecordingFromApp && isRecording) {
+      setIsRecording(false);
+    }
+  }, [isRecordingFromApp, isRecording]);
 
   const handleRecordToggle = () => {
     if (isRecording) {
@@ -45,9 +65,14 @@ const Navigation: React.FC<NavigationProps> = ({ activeTab, setActiveTab, onReco
   return (
     <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50 flex flex-col items-center gap-4">
       {/* Floating Status Label */}
-      {isRecording && (
+      {showListening && (
         <div className="bg-[#f6f5f3]/70 backdrop-blur-2xl text-[#4a3a33] px-4 py-2 rounded-2xl text-[9px] font-bold uppercase tracking-widest animate-pulse shadow-sm">
           Listening...
+        </div>
+      )}
+      {showTranscribing && !showListening && (
+        <div className="bg-[#f6f5f3]/70 backdrop-blur-2xl text-[#4a3a33] px-4 py-2 rounded-2xl text-[9px] font-bold uppercase tracking-widest animate-pulse shadow-sm">
+          Transcribing...
         </div>
       )}
 
@@ -84,18 +109,18 @@ const Navigation: React.FC<NavigationProps> = ({ activeTab, setActiveTab, onReco
 
         <button
           onClick={handleRecordToggle}
-          disabled={isProcessing}
+          disabled={isProcessing || isProcessingFromApp}
           className={`h-14 w-14 rounded-full flex items-center justify-center transition-all duration-300 active:scale-95 bg-[#f6f5f3]/55 backdrop-blur-3xl shadow-[0_8px_32px_rgba(74,58,51,0.08)] ${
-            isRecording
+            (isRecording && isRecordingFromApp)
               ? 'bg-[#4a3a33] text-[#fbfbfa]'
-              : isProcessing
+              : (isProcessing || isProcessingFromApp)
                 ? 'text-[#4a3a33]/35 cursor-not-allowed'
                 : 'text-[#4a3a33] hover:bg-[#f0efed]'
           }`}
         >
-          {isProcessing ? (
+          {(isProcessing || isProcessingFromApp) ? (
             <Loader2 className="animate-spin" size={20} />
-          ) : isRecording ? (
+          ) : (isRecording && isRecordingFromApp) ? (
             <Square size={18} fill="currentColor" />
           ) : (
             <>
