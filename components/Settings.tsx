@@ -12,7 +12,7 @@ interface SettingsProps {
 
 const Settings: React.FC<SettingsProps> = ({ currentUser, onSwitchUser }) => {
   return (
-    <div className="animate-in fade-in slide-in-from-right-4 duration-500 max-w-2xl space-y-10">
+    <div className="animate-in fade-in slide-in-from-right-4 duration-500 max-w-2xl py-6 flex flex-col gap-6">
       <div>
         <h3 className="text-[#4a3a33]/45 text-[10px] font-bold uppercase tracking-widest mb-1">
           Content
@@ -22,7 +22,7 @@ const Settings: React.FC<SettingsProps> = ({ currentUser, onSwitchUser }) => {
         </p>
       </div>
 
-      <div className="flex flex-col gap-3">
+      <div className="flex flex-col gap-4">
         {PROFILES.map((profile) => {
           const isActive = currentUser === profile.id;
           return (

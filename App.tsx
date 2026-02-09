@@ -11,7 +11,7 @@ import ImmersiveReader from './components/ImmersiveReader';
 import EntryEditor from './components/EntryEditor';
 import DevotionalSection from './components/DevotionalSection';
 import Settings from './components/Settings';
-import { getStoredUserId, setStoredUserId, getInitialDataForUser, getAvatarSrc } from './data/userData';
+import { getStoredUserId, setStoredUserId, getInitialDataForUser, getAvatarSrc, getDevotionalForUserAndDate } from './data/userData';
 import { analyzeJournalEntry, generatePersonalizedDevotional } from './services/geminiService';
 import { Search, Settings as SettingsIcon, Plus, Trash2, ChevronRight } from 'lucide-react';
 import { subDays, subHours, format, startOfWeek, addDays, startOfDay, isToday } from 'date-fns';
@@ -220,6 +220,9 @@ const App: React.FC = () => {
   };
 
   const selectedDate = addDays(selectedWeekStart, selectedDayIndex);
+  const selectedDateStr = format(selectedDate, 'yyyy-MM-dd');
+  const displayedDevotional = getDevotionalForUserAndDate(currentUser, selectedDateStr) ?? devotional;
+
   const getHeaderDateLabel = () => {
     const today = startOfDay(new Date());
     const sel = startOfDay(selectedDate);
@@ -247,7 +250,7 @@ const App: React.FC = () => {
         Fixed Header: Exactly 96px (3 lines of 32px)
       */}
       {!showMeditation && !showReader && !editingEntry && (
-      <header className="h-[96px] px-10 flex justify-between items-center relative z-20 bg-[#fbfbfa] flex-shrink-0">
+      <header className="h-14 px-10 flex justify-between items-center relative z-20 bg-[#fbfbfa] flex-shrink-0">
         <button
           type="button"
           onClick={() => setActiveTab(AppTab.SETTINGS)}
@@ -465,34 +468,34 @@ const App: React.FC = () => {
             )}
 
             {activeTab === AppTab.DEVOTIONAL && (
-              <div className="space-y-10 animate-in fade-in slide-in-from-right-4 duration-500 max-w-2xl">
+              <div className="animate-in fade-in slide-in-from-right-4 duration-500 max-w-2xl">
                 {isLoadingDevo ? (
                   <div className="flex flex-col items-center justify-center py-24 text-[#4a3a33]/40">
                     <div className="w-6 h-6 border-2 border-[#e7ded4] border-t-[#4a3a33] rounded-full animate-spin mb-6" />
                     <p className="text-[9px] font-bold uppercase tracking-[0.2em] animate-pulse">Consulting the Spirit...</p>
                   </div>
-                ) : devotional ? (
-                  <div className="space-y-8 py-8">
-                    <div className="text-left space-y-6">
+                ) : displayedDevotional ? (
+                  <div className="py-6 flex flex-col gap-5">
+                    <div className="text-left space-y-4">
                       <p className="melrose-text text-[#4a3a33]">
-                        "{devotional.verse}"
+                        "{displayedDevotional.verse}"
                       </p>
                       <p className="text-[14px] font-bold uppercase tracking-[0.4em] text-[#4a3a33]/45">
-                        — {devotional.reference}
+                        — {displayedDevotional.reference}
                       </p>
                     </div>
 
-                    {devotional.quote && (
+                    {displayedDevotional.quote && (
                       <div className="bg-[#f6f5f3]/50 rounded-2xl p-6 shadow-sm">
                         <p className="melrose-text text-[#4a3a33] italic">
-                          "{devotional.quote}"
+                          "{displayedDevotional.quote}"
                         </p>
                       </div>
                     )}
                     
-                    {devotional.sections && devotional.sections.length > 0 ? (
-                      <div className="space-y-0">
-                        {devotional.sections.map((section, idx) => (
+                    {displayedDevotional.sections && displayedDevotional.sections.length > 0 ? (
+                      <div className="flex flex-col gap-5">
+                        {displayedDevotional.sections.map((section, idx) => (
                           <DevotionalSection
                             key={idx}
                             title={section.title}
@@ -502,8 +505,8 @@ const App: React.FC = () => {
                         ))}
                       </div>
                     ) : (
-                      <div className="space-y-4">
-                        {devotional.reflection && (
+                      <div className="flex flex-col gap-5">
+                        {displayedDevotional.reflection && (
                           <button
                             type="button"
                             onClick={() => setShowReader('reflection')}
@@ -516,12 +519,12 @@ const App: React.FC = () => {
                               <ChevronRight size={18} className="text-[#4a3a33]/40 group-hover:text-[#4a3a33] group-hover:translate-x-1 transition-all" />
                             </div>
                             <p className="melrose-text text-[#4a3a33]/60 mt-3 line-clamp-2">
-                              {devotional.reflection.split('\n\n')[0]}
+                              {displayedDevotional.reflection.split('\n\n')[0]}
                             </p>
                           </button>
                         )}
 
-                        {devotional.prayer && (
+                        {displayedDevotional.prayer && (
                           <button
                             type="button"
                             onClick={() => setShowReader('prayer')}
@@ -534,7 +537,7 @@ const App: React.FC = () => {
                               <ChevronRight size={18} className="text-[#4a3a33]/40 group-hover:text-[#4a3a33] group-hover:translate-x-1 transition-all" />
                             </div>
                             <p className="melrose-text text-[#4a3a33]/60 mt-3 line-clamp-2">
-                              {devotional.prayer.split('\n\n')[0]}
+                              {displayedDevotional.prayer.split('\n\n')[0]}
                             </p>
                           </button>
                         )}
@@ -562,17 +565,17 @@ const App: React.FC = () => {
       {showMeditation && (
         <BreathingMeditation onClose={() => setShowMeditation(false)} />
       )}
-      {showReader === 'reflection' && devotional?.reflection && (
+      {showReader === 'reflection' && displayedDevotional?.reflection && (
         <ImmersiveReader
           title="The Reflection"
-          content={devotional.reflection}
+          content={displayedDevotional.reflection}
           onClose={() => setShowReader(null)}
         />
       )}
-      {showReader === 'prayer' && devotional?.prayer && (
+      {showReader === 'prayer' && displayedDevotional?.prayer && (
         <ImmersiveReader
           title="A Simple Prayer"
-          content={devotional.prayer}
+          content={displayedDevotional.prayer}
           onClose={() => setShowReader(null)}
         />
       )}

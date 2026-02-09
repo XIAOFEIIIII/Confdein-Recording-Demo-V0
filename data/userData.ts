@@ -2,8 +2,8 @@ import { JournalEntry, Devotional, PrayerRequest } from '../types';
 import { subDays, subHours } from 'date-fns';
 import type { CurrentUserId, UserProfile } from '../types';
 
-// Base "now" in 2026 so all notes fall in 2026
-const now = new Date(2026, 0, 26, 12, 0, 0).getTime();
+// Base "now" in 2026, evening (9 PM) so most timestamps fall in the evening
+const now = new Date(2026, 0, 26, 21, 0, 0).getTime();
 
 export interface UserInitialData {
   entries: JournalEntry[];
@@ -53,7 +53,7 @@ const ERICA_ENTRIES: JournalEntry[] = [
   },
   {
     id: 'entry-4',
-    timestamp: subHours(now, 28).getTime(),
+    timestamp: subHours(now, 26).getTime(), // Jan 25 ~19:00
     transcript: "Summarizing the law\n\nSome people think the Bible is nothing but a book of rules. But Jesus neatly summarized all these rules when he said to love God with all your heart, and to love your neighbor as yourself. He called these the greatest commandments (or rules) of all. By carrying out Jesus' simple commands, we find ourselves following all of God's other laws as well.",
     summary: "Jesus' summary: love God and love your neighbor.",
     keywords: ["law", "commandments", "love", "Jesus"],
@@ -80,7 +80,7 @@ const ERICA_ENTRIES: JournalEntry[] = [
   },
   {
     id: 'entry-6',
-    timestamp: subDays(now, 2).getTime() - 1000 * 60 * 60 * 5,
+    timestamp: subDays(now, 2).getTime() - 1000 * 60 * 60 * 3, // Jan 24 18:00
     transcript: "THE OCCULT\n\nEveryone is interested in what the future holds, and we often look to others for guidance. But God warned about looking to the occult for advice. Mediums and spiritists were outlawed because God was not the source of their information. At best, occult practitioners are fakes whose predictions cannot be trusted. At worst, they are in contact with evil spirits and are thus extremely dangerous. We don't need to look to the occult for information about the future. God has given us the Bible so that we may obtain all the information we need—the Bible's teachings are trustworthy.",
     summary: "Avoiding the occult; trusting Scripture for the future.",
     keywords: ["occult", "mediums", "Bible", "future"],
@@ -93,7 +93,7 @@ const ERICA_ENTRIES: JournalEntry[] = [
 const ROMAN_ENTRIES: JournalEntry[] = [
   {
     id: 'roman-1',
-    timestamp: new Date(2026, 0, 25).getTime(),
+    timestamp: new Date(2026, 0, 25, 18, 30).getTime(),
     transcript: "Sunday Service\n\nDoes more pleasure give more brokenness. More pleasure leads to wanting more. Never satisfied. Pleasure is a gift of grace that points us to eternity. We forget grace is something we don't deserve. We start working and think we deserve things.",
     summary: "Pleasure, grace, and deserving—Sunday service reflection.",
     keywords: ["pleasure", "grace", "brokenness", "eternity", "deserving"],
@@ -101,7 +101,7 @@ const ROMAN_ENTRIES: JournalEntry[] = [
   },
   {
     id: 'roman-2',
-    timestamp: new Date(2026, 0, 26).getTime(),
+    timestamp: new Date(2026, 0, 26, 20, 15).getTime(),
     transcript: "Woke up today and blessed the Lord. Went to the gym then went to work. The Lord has blessed me w/ a job. No christians in sight. The Lord has been helping me stop lying due to people pleasing. Anytime I get the urge to say a lie I get convicted. Praying the Lord helps me wake up sooner. Tired now so going to sleep. Lord heal my cough also.",
     summary: "Blessing the Lord, job, stopping lying, conviction, prayers for sleep and healing.",
     keywords: ["blessing", "job", "lying", "people pleasing", "conviction", "healing"],
@@ -112,13 +112,13 @@ const ROMAN_ENTRIES: JournalEntry[] = [
         personName: 'Self',
         request: 'Lord help me wake up sooner. Heal my cough.',
         status: 'active',
-        createdAt: new Date(2026, 0, 26).getTime(),
+        createdAt: new Date(2026, 0, 26, 20, 0).getTime(),
       },
     ],
   },
   {
     id: 'roman-3',
-    timestamp: new Date(2026, 0, 31).getTime(),
+    timestamp: new Date(2026, 0, 31, 21, 0).getTime(),
     transcript: "Went to a Christian event. Sang worship and heard testimonies. These people are famous yet still seek the Lord. Crazy people like that exist. God is so good! Got to meet them like Ahawty, Jack, BG, Athang , Tiff, KP. All cool people.",
     summary: "Christian event, worship, testimonies, famous people seeking the Lord.",
     keywords: ["worship", "testimonies", "Christian event", "community"],
@@ -126,7 +126,7 @@ const ROMAN_ENTRIES: JournalEntry[] = [
   },
   {
     id: 'roman-4',
-    timestamp: new Date(2026, 1, 1).getTime(),
+    timestamp: new Date(2026, 1, 1, 22, 45).getTime(),
     transcript: "Sunday Service\n\nJesus tests us. He gives us things but not too easy so we need to rely on Him. As I pray I do not. Even if Jesus says NO keep praying. Mt 15:27 He could just be testing you to see if you want it bad enough.",
     summary: "Jesus tests us so we rely on Him; keep praying even if He says no.",
     keywords: ["testing", "rely on God", "prayer", "persistence"],
@@ -167,19 +167,73 @@ God is orderly, and therefore He expects that His creation do all things "decent
 };
 
 const ROMAN_DEVOTIONAL: Devotional = {
-  verse: 'The Lord is my strength and my song, and he has become my salvation.',
-  reference: 'Exodus 15:2',
-  quote: "Worship is the strategy by which we interrupt our preoccupation with ourselves and attend to the presence of God. — Eugene Peterson",
-  reflection: `After the Red Sea, Israel sang. They had just been delivered from Pharaoh's army—deliverance they could not have engineered themselves. Moses and the people responded with a song of praise.
+  verse: 'The fear of man lays a snare, but whoever trusts in the LORD is safe.',
+  reference: 'Proverbs 29:25',
+  quote: 'Every time we choose approval over truth, we trade freedom for fear.',
+  reflection: `There is a quiet battle many of us fight every day, often without naming it. It's the pull between being truthful and being liked. In moments when honesty feels risky, we learn to soften the truth, bend it slightly, or hide parts of ourselves—not to deceive maliciously, but to stay safe, accepted, and unchallenged.
 
-This is the pattern: God acts, his people remember and respond in worship. The song is not only about the past event; it declares who God is—strength, song, salvation. So worship is both gratitude for what he has done and confession of who he is.
+But people-pleasing always comes at a cost. Every small lie asks us to trade a piece of our freedom for approval. Over time, we forget where the line is, and the life we present slowly drifts away from the life we're actually living. God's conviction interrupts this drift—not to shame us, but to bring us back into the light.
 
-When we're in the middle of stress or uncertainty, we often default to rumination—going over the same worries again and again. Worship interrupts that. It turns our attention from the size of our problems to the size of our God. It doesn't deny the difficulty; it places it in the context of a God who saves.
-
-Take a moment to name one way God has provided or protected you recently. Then put it into a simple sentence of praise: "Lord, you are my ______." That's the beginning of your own song.`,
-  prayer: `Lord, you are my strength and my song; you have become my salvation. When I am tempted to fixate on my fears, turn my heart to worship. Remind me of what you have already done, and who you are. Amen.`,
+When the Spirit stops you before a lie leaves your mouth, that moment is sacred. It's an invitation to choose trust over control, truth over approval. Honesty may feel uncomfortable, but it creates space for real peace. God is not asking you to be impressive or well-liked. He is asking you to be free. And freedom begins the moment you decide that being known by God matters more than being approved by people.`,
+  prayer: `Lord, help me choose truth when approval feels easier. Expose the places where fear of people has shaped my words, and replace that fear with trust in You. Teach me to live honestly before You and others, knowing that my security comes from You alone. Amen.`,
   sections: [],
 };
+
+/** Jan 25 — "When 'I Deserve' Takes Over" */
+const ROMAN_DEVOTIONAL_2026_01_25: Devotional = {
+  verse: 'What do you have that you did not receive? And if you did receive it, why do you boast as though you did not?',
+  reference: '1 Corinthians 4:7',
+  quote: 'Grace stops being grace the moment we think we deserve it.',
+  reflection: `There's a quiet shift that can happen in the heart—almost without us noticing. We start with gratitude: "Lord, thank You." But over time, if we're not careful, gratitude can drift into entitlement: "Lord, I worked hard… so I should have this." And the moment "I deserve" becomes the soundtrack of our life, our joy becomes fragile. Pleasure stops being a gift and turns into a demand. We need more, we chase more, and somehow we're still not satisfied.
+
+Grace tells a different story. Grace reminds us that life with God is not a paycheck; it's a relationship. Not a transaction; it's a gift. When we remember that everything we have is mercy, our hearts soften again. We can enjoy good things without worshiping them. We can work diligently without thinking God owes us. And when we don't get what we want, we don't spiral into bitterness—we return to trust.
+
+Today, let grace reframe your expectations. Ask the Lord to expose the places where you've begun to keep score, to measure your worth by what you receive, or to demand what you were meant to receive with open hands. There is freedom in humility, and there is deep rest in remembering: He is good—even when He says "not yet."`,
+  prayer: `Lord, forgive me for the ways I've turned Your gifts into expectations and Your grace into something I think I've earned. Soften my heart, reset my desires, and teach me to receive with gratitude instead of entitlement. Amen.`,
+  sections: [],
+};
+
+/** Jan 31 — "Still Seeking" */
+const ROMAN_DEVOTIONAL_2026_01_31: Devotional = {
+  verse: 'Blessed are those who hunger and thirst for righteousness, for they shall be satisfied.',
+  reference: 'Matthew 5:6',
+  quote: 'True maturity is not being known by many, but still choosing to seek God when you could rely on your name.',
+  reflection: `It's easy to assume that spiritual hunger fades as success grows. We tell ourselves that those who are admired, influential, or celebrated must have somehow "arrived." But moments like this gently correct that assumption. Seeing people who are known by many still worship sincerely, still testify honestly, still seek the Lord with humility reminds us of something deeply important: knowing God is not a phase we outgrow.
+
+True spiritual maturity is not measured by visibility, gifting, or recognition. It's revealed in dependence. The people who continue to seek God—not because they need exposure, but because they need Him—quietly model a faith that is rooted, not performative. Their lives testify that no amount of applause can replace the presence of God, and no platform can satisfy what only He can fill.
+
+Let this moment reshape your imagination. Don't rush to admire people for who they are or what they've achieved. Instead, notice what sustains them. Let their continued hunger remind you that the goal of faith is not to be impressive, but to remain dependent. God is not looking for people who have outgrown their need for Him—He delights in those who never stop seeking.`,
+  prayer: `Lord, protect my heart from mistaking visibility for maturity or admiration for fulfillment. Teach me to hunger for you above recognition, success, or approval. Let my faith be rooted in dependence, not performance, and keep me seeking you in every season of life. Amen.`,
+  sections: [],
+};
+
+/** Feb 1 — "Even the Crumbs" */
+const ROMAN_DEVOTIONAL_2026_02_01: Devotional = {
+  verse: 'Yes, Lord, yet even the dogs eat the crumbs that fall from their masters\' table.',
+  reference: 'Matthew 15:27',
+  quote: 'Faith does not insist on entitlement; it clings to mercy.',
+  reflection: `There are moments in prayer when God's response feels sharp, distant, or even discouraging. Moments when His words don't sound like comfort, but like resistance. Matthew 15:27 places us right inside one of those moments. The woman has already been ignored, already been challenged, and still she stays. When Jesus' words seem to push her away, she does not argue her worth—she clings to His mercy.
+
+Her reply is striking not because it is clever, but because it is humble. She does not demand a seat at the table. She does not insist on her rights. She asks only for the crumbs—trusting that even the smallest portion of Jesus' grace is enough to heal, to restore, to save. This is faith stripped of entitlement. Faith that no longer negotiates, but depends.
+
+Sometimes God allows our prayers to be tested so that our motives can be revealed. Do we come to Him only when we expect full answers, immediate relief, and visible blessing? Or do we come because we believe that who He is—alone—is enough? This woman teaches us that true faith does not retreat when tested. It bows low, holds on tightly, and says: Even this is enough, if it comes from You.`,
+  prayer: `Lord, when Your answers test my expectations, keep my heart from turning away. Teach me to trust that even the smallest measure of Your grace is enough for me. Strip me of entitlement, deepen my dependence, and help me remain humble and faithful when prayer feels costly. Amen.`,
+  sections: [],
+};
+
+const ROMAN_DEVOTIONAL_BY_DATE: Record<string, Devotional> = {
+  '2026-01-25': ROMAN_DEVOTIONAL_2026_01_25,
+  '2026-01-31': ROMAN_DEVOTIONAL_2026_01_31,
+  '2026-02-01': ROMAN_DEVOTIONAL_2026_02_01,
+};
+
+/** Get devotional for display; Roman uses date-specific when available, else default. */
+export function getDevotionalForUserAndDate(userId: CurrentUserId, dateStr: string): Devotional | null {
+  const u = USER_DATA[userId];
+  if (!u.devotional) return null;
+  if (userId === 'roman' && ROMAN_DEVOTIONAL_BY_DATE[dateStr]) return ROMAN_DEVOTIONAL_BY_DATE[dateStr];
+  return u.devotional;
+}
 
 const ERICA_VERSES = [
   { verse: 'The Lord is my shepherd; I shall not want.', reference: 'Psalm 23:1' },

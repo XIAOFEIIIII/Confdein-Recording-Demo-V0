@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { JournalEntry } from '../types';
-import { format, startOfDay, startOfWeek, addDays, isToday } from 'date-fns';
+import { format, startOfDay, startOfWeek, addDays } from 'date-fns';
 import { Quote } from 'lucide-react';
 
 interface JournalTimelineProps {
@@ -73,7 +73,25 @@ const JournalTimeline: React.FC<JournalTimelineProps> = ({
     setTimeout(() => setIsScrolling(false), 500);
   }, [scrollToDayIndex, currentPageIndex, onPageChange]);
 
-  // Handle scroll to update current page and notify parent
+  // Snap to nearest day when scroll ends (so one swipe can jump multiple days without passing through)
+  const snapToNearestRef = useRef<() => void>(() => {});
+  snapToNearestRef.current = () => {
+    const container = scrollContainerRef.current;
+    if (!container) return;
+    const pageWidth = container.clientWidth;
+    const pageIndex = Math.round(container.scrollLeft / pageWidth);
+    const clamped = Math.max(0, Math.min(6, pageIndex));
+    const targetLeft = clamped * pageWidth;
+    if (Math.abs(container.scrollLeft - targetLeft) < 2) return;
+    setIsScrolling(true);
+    container.scrollTo({ left: targetLeft, behavior: 'smooth' });
+    setCurrentPageIndex(clamped);
+    onPageChange?.(clamped);
+    setTimeout(() => setIsScrolling(false), 400);
+  };
+  const handleScrollEnd = useCallback(() => { snapToNearestRef.current(); }, []);
+
+  // Handle scroll: update current page for header; on scroll end snap to nearest day
   useEffect(() => {
     const container = scrollContainerRef.current;
     if (!container) return;
@@ -89,9 +107,23 @@ const JournalTimeline: React.FC<JournalTimelineProps> = ({
       }
     };
 
+    let scrollEndTimer: ReturnType<typeof setTimeout>;
+    const scheduleSnap = () => {
+      clearTimeout(scrollEndTimer);
+      scrollEndTimer = setTimeout(handleScrollEnd, 150);
+    };
+
     container.addEventListener('scroll', handleScroll, { passive: true });
-    return () => container.removeEventListener('scroll', handleScroll);
-  }, [currentPageIndex, isScrolling, onPageChange]);
+    container.addEventListener('scroll', scheduleSnap, { passive: true });
+    container.addEventListener('scrollend', handleScrollEnd);
+
+    return () => {
+      container.removeEventListener('scroll', handleScroll);
+      container.removeEventListener('scroll', scheduleSnap);
+      clearTimeout(scrollEndTimer);
+      container.removeEventListener('scrollend', handleScrollEnd);
+    };
+  }, [currentPageIndex, isScrolling, onPageChange, handleScrollEnd]);
 
   const handlePageIndicatorClick = (index: number) => {
     const container = scrollContainerRef.current;
@@ -110,22 +142,18 @@ const JournalTimeline: React.FC<JournalTimelineProps> = ({
     <div className="w-full h-full flex flex-col" style={{ height: '100%' }}>
       <div
         ref={scrollContainerRef}
-        className="flex-1 flex overflow-x-auto snap-x snap-mandatory no-scrollbar"
+        className="flex-1 flex overflow-x-auto no-scrollbar"
         style={{
-          scrollSnapType: 'x mandatory',
           WebkitOverflowScrolling: 'touch',
           height: '100%'
         }}
       >
-        {dayKeys.map((dayKey, dayIndex) => {
+        {dayKeys.map((dayKey) => {
           const dayEntries = groupedEntries[dayKey] ?? [];
-          const entryDate = new Date(dayKey + 'T12:00:00');
-          const isTodayPage = isToday(entryDate);
-          
           return (
             <div
               key={dayKey}
-              className="flex-shrink-0 w-full h-full snap-start"
+              className="flex-shrink-0 w-full h-full"
               style={{
                 width: '100%',
                 minWidth: '100%',
@@ -148,28 +176,6 @@ const JournalTimeline: React.FC<JournalTimelineProps> = ({
                   backgroundPosition: '0 0'
                 }}
               >
-                {/* Date Header Block: Exactly 64px high */}
-                <div 
-                  className="flex items-end"
-                  style={{ 
-                    height: '64px',
-                    margin: 0,
-                    padding: 0,
-                    paddingBottom: '2px'
-                  }}
-                >
-                  <div className="flex items-baseline" style={{ lineHeight: '32px' }}>
-                    <span
-                      className={`uppercase tracking-[0.2em] ${
-                        isTodayPage ? 'text-[15px] font-bold text-stone-900' : 'text-sm font-bold text-stone-700'
-                      }`}
-                      style={{ lineHeight: '32px' }}
-                    >
-                      {format(entryDate, 'MMMM d')}
-                    </span>
-                  </div>
-                </div>
-                
                 {dayEntries.length === 0 ? (
                   <div className="flex flex-col items-center justify-center py-24 px-6 text-stone-300">
                     <Quote size={28} className="opacity-20 mb-4" />
@@ -215,10 +221,11 @@ const JournalTimeline: React.FC<JournalTimelineProps> = ({
                           const idx = entry.transcript.indexOf('\n\n');
                           const title = idx >= 0 ? entry.transcript.slice(0, idx) : entry.transcript;
                           const body = idx >= 0 ? entry.transcript.slice(idx + 2) : '';
+                          const hasTitle = idx >= 0 && body.length > 0;
                           return (
                             <>
                               <p 
-                                className="handwriting text-stone-800 text-[15px] opacity-90 select-none whitespace-pre-line journal-transcript"
+                                className={`handwriting text-stone-800 text-[15px] opacity-90 select-none whitespace-pre-line ${hasTitle ? 'journal-transcript' : ''}`}
                                 style={{
                                   lineHeight: '32px',
                                   margin: 0,
@@ -279,7 +286,7 @@ const JournalTimeline: React.FC<JournalTimelineProps> = ({
                         {entry.keywords && entry.keywords.map((kw, i) => (
                           <span
                             key={i}
-                            className="text-[12px] text-stone-500 inline-flex items-center px-2 py-1 rounded-full bg-stone-200/60"
+                            className="text-[12px] text-stone-400 inline-flex items-center"
                             style={{ height: '32px', lineHeight: '32px' }}
                           >
                             #{kw.toLowerCase()}
