@@ -1,6 +1,7 @@
 import { JournalEntry, Devotional, PrayerRequest, PrayerReminderSettings, PrayerCompletionRecord } from '../types';
-import { subDays, subHours } from 'date-fns';
 import type { CurrentUserId, UserProfile } from '../types';
+import type { MoodLevel } from '../types';
+import { subDays, subHours, startOfDay, addDays, format } from 'date-fns';
 
 // Base "now" in 2026, evening (9 PM) so most timestamps fall in the evening
 const now = new Date(2026, 0, 26, 21, 0, 0).getTime();
@@ -31,6 +32,60 @@ const detectMoodFromTimestamp = (timestamp: number): MoodLevel => {
   }
   return Math.max(1, Math.min(5, baseMood)) as MoodLevel;
 };
+
+/** Default morning/evening slots for backfilling prayer entries (same as getDefaultPrayerReminderSettings) */
+const PRAYER_SLOTS = [
+  { id: 'morning', label: 'Morning Prayer', hour: 7, minute: 0 },
+  { id: 'evening', label: 'Evening Reflection', hour: 21, minute: 0 },
+] as const;
+
+function createPrayerEntryForSlot(
+  slotId: string,
+  label: string,
+  date: Date,
+  hour: number,
+  minute: number,
+  overrides?: Partial<JournalEntry>
+): JournalEntry {
+  const timestamp = new Date(date.getFullYear(), date.getMonth(), date.getDate(), hour, minute, 0).getTime();
+  return {
+    id: overrides?.id ?? `prayer-${slotId}-${format(date, 'yyyy-MM-dd')}-${timestamp}`,
+    timestamp,
+    transcript: overrides?.transcript ?? '',
+    summary: overrides?.summary ?? '',
+    keywords: overrides?.keywords ?? [],
+    moodLevel: (overrides?.moodLevel ?? detectMoodFromTimestamp(timestamp)) as MoodLevel,
+    isPrayerEntry: true,
+    prayerSlotId: slotId,
+    ...overrides,
+  };
+}
+
+/** Add Morning + Evening prayer entries for every day from fromDate through toDate if missing. */
+function ensurePrayerEntriesForDates(
+  entries: JournalEntry[],
+  fromDate: Date,
+  toDate: Date
+): JournalEntry[] {
+  const added: JournalEntry[] = [];
+  const dayStart = startOfDay(fromDate);
+  const dayEnd = startOfDay(toDate);
+  for (let d = new Date(dayStart); d.getTime() <= dayEnd.getTime(); d = addDays(d, 1)) {
+    const dateStr = format(d, 'yyyy-MM-dd');
+    for (const slot of PRAYER_SLOTS) {
+      const hasEntry = entries.some(
+        (e) => e.isPrayerEntry && e.prayerSlotId === slot.id && format(new Date(e.timestamp), 'yyyy-MM-dd') === dateStr
+      );
+      if (!hasEntry) {
+        added.push(createPrayerEntryForSlot(slot.id, slot.label, d, slot.hour, slot.minute));
+      }
+    }
+  }
+  if (added.length === 0) return entries;
+  const merged = [...entries, ...added];
+  merged.sort((a, b) => b.timestamp - a.timestamp);
+  return merged;
+}
 
 const ERICA_ENTRIES: JournalEntry[] = [
   {
@@ -113,6 +168,29 @@ const ERICA_ENTRIES: JournalEntry[] = [
     moodLevel: detectMoodFromTimestamp(subDays(now, 2).getTime() - 1000 * 60 * 60 * 3),
     scripture: 'Lev 19:31; 20:6, 27',
   },
+  // Seed prayer entries (with content)
+  {
+    id: 'erica-prayer-morning-2026-01-24',
+    timestamp: new Date(2026, 0, 24, 7, 0, 0).getTime(),
+    transcript: "Started the day with gratitude. Asked for strength to love my neighbor and to be patient with the new people at work. Remembered Grandma—prayed for her health and for a visit soon.",
+    summary: "Morning prayer: gratitude, neighbor love, Grandma.",
+    keywords: [],
+    mood: 'hopeful',
+    moodLevel: detectMoodFromTimestamp(new Date(2026, 0, 24, 7, 0, 0).getTime()) as MoodLevel,
+    isPrayerEntry: true,
+    prayerSlotId: 'morning',
+  },
+  {
+    id: 'erica-prayer-evening-2026-01-25',
+    timestamp: new Date(2026, 0, 25, 21, 0, 0).getTime(),
+    transcript: "Quiet reflection before bed. Thanked God for the sermon on loving God and neighbor. Confessed rushing through the day without pausing. Asked for a more present heart tomorrow.",
+    summary: "Evening reflection: thanks for sermon, confession, tomorrow.",
+    keywords: [],
+    mood: 'peaceful',
+    moodLevel: detectMoodFromTimestamp(new Date(2026, 0, 25, 21, 0, 0).getTime()) as MoodLevel,
+    isPrayerEntry: true,
+    prayerSlotId: 'evening',
+  },
 ];
 
 // Roman's journal entries (1/25, 1/26, 1/31, 2/1 — 2026). Titles have no dates; no title when it would be empty.
@@ -163,6 +241,29 @@ const ROMAN_ENTRIES: JournalEntry[] = [
     mood: 'hopeful',
     moodLevel: detectMoodFromTimestamp(new Date(2026, 1, 1, 22, 45).getTime()),
     scripture: 'Mt 15:27',
+  },
+  // Seed prayer entries (with content)
+  {
+    id: 'roman-prayer-morning-2026-01-25',
+    timestamp: new Date(2026, 0, 25, 7, 0, 0).getTime(),
+    transcript: "Woke up and blessed the Lord. Prayed for the Sunday service later—that I’d hear Him clearly. Asked for help to stop people-pleasing and to be honest today.",
+    summary: "Morning: bless the Lord, Sunday service, honesty.",
+    keywords: [],
+    mood: 'grateful',
+    moodLevel: detectMoodFromTimestamp(new Date(2026, 0, 25, 7, 0, 0).getTime()) as MoodLevel,
+    isPrayerEntry: true,
+    prayerSlotId: 'morning',
+  },
+  {
+    id: 'roman-prayer-evening-2026-01-26',
+    timestamp: new Date(2026, 0, 26, 21, 0, 0).getTime(),
+    transcript: "End of day. Thanked God for the job and for conviction when I was about to lie. Prayed again for my cough and for earlier wake-up. Good night Lord.",
+    summary: "Evening: thanks for job and conviction; cough and sleep.",
+    keywords: [],
+    mood: 'grateful',
+    moodLevel: detectMoodFromTimestamp(new Date(2026, 0, 26, 21, 0, 0).getTime()) as MoodLevel,
+    isPrayerEntry: true,
+    prayerSlotId: 'evening',
   },
 ];
 
@@ -338,8 +439,13 @@ export function setStoredUserId(id: CurrentUserId): void {
 
 export function getInitialDataForUser(userId: CurrentUserId): UserInitialData {
   const u = USER_DATA[userId];
+  const baseEntries = [...u.entries];
+  const minTs = baseEntries.length ? Math.min(...baseEntries.map((e) => e.timestamp)) : now;
+  const fromDate = startOfDay(new Date(Math.min(minTs, now)));
+  const toDate = startOfDay(new Date(now));
+  const entries = ensurePrayerEntriesForDates(baseEntries, fromDate, toDate);
   return {
-    entries: [...u.entries],
+    entries,
     devotional: u.devotional ? { ...u.devotional } : null,
     verses: [...u.verses],
     avatarSeed: u.avatarSeed,

@@ -15,6 +15,10 @@ export interface JournalEntry {
   prayerRequests?: PrayerRequest[];
   /** Scripture reference (e.g. Lev 19:32) matched to the entry theme */
   scripture?: string;
+  /** 标记是否为 Prayer Entry（由提醒触发创建） */
+  isPrayerEntry?: boolean;
+  /** 关联的提醒时间点 ID（如 'morning', 'evening'） */
+  prayerSlotId?: string;
 }
 
 export interface PrayerRequest {

@@ -152,6 +152,29 @@ const App: React.FC = () => {
   const [newPrayerRequest, setNewPrayerRequest] = useState('');
   const [newPrayerTerm, setNewPrayerTerm] = useState<'short' | 'long'>('short');
 
+  // Helper function to find existing Prayer Entry for a slot on a specific date
+  const findExistingPrayerEntry = (slotId: string, date: string): JournalEntry | undefined => {
+    return entries.find(entry => 
+      entry.isPrayerEntry === true && 
+      entry.prayerSlotId === slotId && 
+      format(new Date(entry.timestamp), 'yyyy-MM-dd') === date
+    );
+  };
+
+  // Create empty Prayer Entry
+  const createEmptyPrayerEntry = (slotId: string, slotLabel: string, timestamp: number): JournalEntry => {
+    return {
+      id: `prayer-${slotId}-${format(new Date(timestamp), 'yyyy-MM-dd')}-${Date.now()}`,
+      timestamp, // Use the exact reminder time
+      transcript: '', // Empty content
+      summary: '', // Empty summary
+      keywords: [],
+      moodLevel: detectMoodFromBiometrics(timestamp),
+      isPrayerEntry: true,
+      prayerSlotId: slotId,
+    };
+  };
+
   /** Simulate ring biometric detection: HRV, heart rate variability, stress level -> moodLevel 1-5 */
   const detectMoodFromBiometrics = (timestamp: number): MoodLevel => {
     // Use timestamp as seed for deterministic but varied results
@@ -191,6 +214,36 @@ const App: React.FC = () => {
               term: 'short' as const,
             }))
           : undefined;
+      
+      // Check if there's an active reminder and an empty Prayer Entry
+      if (activeReminderSlotId) {
+        const today = format(new Date(), 'yyyy-MM-dd');
+        const existingEmptyEntry = entries.find(entry => 
+          entry.isPrayerEntry === true && 
+          entry.prayerSlotId === activeReminderSlotId && 
+          format(new Date(entry.timestamp), 'yyyy-MM-dd') === today &&
+          entry.transcript === ''
+        );
+        
+        if (existingEmptyEntry) {
+          // Update the empty Prayer Entry with recording content
+          const updatedEntry: JournalEntry = {
+            ...existingEmptyEntry,
+            transcript,
+            summary: analysis.summary || "Recorded a thought.",
+            keywords: analysis.keywords || [],
+            mood: analysis.mood as any,
+            moodLevel: detectMoodFromBiometrics(timestamp),
+            ...(prayerRequests && { prayerRequests }),
+          };
+          setEntries(prev => prev.map(e => e.id === existingEmptyEntry.id ? updatedEntry : e));
+          setIsProcessingRecording(false);
+          setShowImmersiveRecording(false);
+          return;
+        }
+      }
+      
+      // Create new entry (either no active reminder or no empty entry found)
       const newEntry: JournalEntry = {
         id: newId,
         timestamp,
@@ -200,6 +253,11 @@ const App: React.FC = () => {
         mood: analysis.mood as any,
         moodLevel: detectMoodFromBiometrics(timestamp), // Auto-detect from ring biometrics
         ...(prayerRequests && { prayerRequests }),
+        // Mark as Prayer Entry if there's an active reminder
+        ...(activeReminderSlotId && {
+          isPrayerEntry: true,
+          prayerSlotId: activeReminderSlotId,
+        }),
       };
       setEntries(prev => [newEntry, ...prev]);
       setIsProcessingRecording(false);
@@ -296,6 +354,35 @@ const App: React.FC = () => {
 
       if (matchingSlot) {
         setActiveReminderSlotId(matchingSlot.id);
+        
+        // Create empty Prayer Entry if it doesn't exist
+        setEntries(prev => {
+          const existingEntry = prev.find(entry => 
+            entry.isPrayerEntry === true && 
+            entry.prayerSlotId === matchingSlot.id && 
+            format(new Date(entry.timestamp), 'yyyy-MM-dd') === today
+          );
+          
+          if (!existingEntry) {
+            const reminderTimestamp = new Date(now.getFullYear(), now.getMonth(), now.getDate(), matchingSlot.hour, matchingSlot.minute, 0).getTime();
+            const emptyEntry = createEmptyPrayerEntry(matchingSlot.id, matchingSlot.label, reminderTimestamp);
+            
+            // Mark as completed
+            const newCompletionRecord = completionRecord || {
+              date: today,
+              completedSlots: [],
+              completedAt: {},
+            };
+            if (!newCompletionRecord.completedSlots.includes(matchingSlot.id)) {
+              newCompletionRecord.completedSlots.push(matchingSlot.id);
+              newCompletionRecord.completedAt[matchingSlot.id] = reminderTimestamp;
+              setPrayerCompletionRecord(currentUser, newCompletionRecord);
+            }
+            
+            return [emptyEntry, ...prev];
+          }
+          return prev;
+        });
       } else {
         // Clear reminder if time has passed
         if (activeReminderSlotId) {
@@ -335,6 +422,47 @@ const App: React.FC = () => {
     return () => clearInterval(interval);
   }, []);
 
+  // On app load: create Prayer Entries for today's past reminder times (so Journal shows Morning/Evening slots)
+  useEffect(() => {
+    if (!prayerReminderSettings || !prayerReminderSettings.enabled) return;
+
+    const today = format(new Date(), 'yyyy-MM-dd');
+    const now = new Date();
+    const nowMinutes = now.getHours() * 60 + now.getMinutes();
+
+    setEntries(prev => {
+      const newEntries: JournalEntry[] = [];
+      let hasChanges = false;
+
+      prayerReminderSettings.timeSlots.forEach(slot => {
+        if (!slot.enabled) return;
+        const slotMinutes = slot.hour * 60 + slot.minute;
+        if (slotMinutes >= nowMinutes) return; // future slot, skip
+
+        const existingEntry = prev.find(entry =>
+          entry.isPrayerEntry === true &&
+          entry.prayerSlotId === slot.id &&
+          format(new Date(entry.timestamp), 'yyyy-MM-dd') === today
+        );
+        if (existingEntry) return;
+
+        const reminderTimestamp = new Date(now.getFullYear(), now.getMonth(), now.getDate(), slot.hour, slot.minute, 0).getTime();
+        const emptyEntry = createEmptyPrayerEntry(slot.id, slot.label, reminderTimestamp);
+        newEntries.push(emptyEntry);
+        hasChanges = true;
+
+        const completionRecord = getPrayerCompletionRecord(currentUser, today) || { date: today, completedSlots: [], completedAt: {} };
+        if (!completionRecord.completedSlots.includes(slot.id)) {
+          completionRecord.completedSlots.push(slot.id);
+          completionRecord.completedAt[slot.id] = reminderTimestamp;
+          setPrayerCompletionRecord(currentUser, completionRecord);
+        }
+      });
+
+      return hasChanges ? [...newEntries, ...prev] : prev;
+    });
+  }, [prayerReminderSettings, currentUser]);
+
   const handleReminderComplete = () => {
     if (!activeReminderSlotId) return;
     
@@ -345,12 +473,30 @@ const App: React.FC = () => {
       completedAt: {},
     };
 
-    if (!completionRecord.completedSlots.includes(activeReminderSlotId)) {
-      completionRecord.completedSlots.push(activeReminderSlotId);
-      completionRecord.completedAt[activeReminderSlotId] = Date.now();
-      setPrayerCompletionRecord(currentUser, completionRecord);
+    // Check if empty Prayer Entry exists, if not create it
+    const existingEntry = findExistingPrayerEntry(activeReminderSlotId, today);
+    if (!existingEntry) {
+      const now = new Date();
+      const matchingSlot = prayerReminderSettings?.timeSlots.find(s => s.id === activeReminderSlotId);
+      if (matchingSlot) {
+        const reminderTimestamp = new Date(now.getFullYear(), now.getMonth(), now.getDate(), matchingSlot.hour, matchingSlot.minute, 0).getTime();
+        const emptyEntry = createEmptyPrayerEntry(activeReminderSlotId, matchingSlot.label, reminderTimestamp);
+        setEntries(prev => [emptyEntry, ...prev]);
+        
+        if (!completionRecord.completedSlots.includes(activeReminderSlotId)) {
+          completionRecord.completedSlots.push(activeReminderSlotId);
+          completionRecord.completedAt[activeReminderSlotId] = reminderTimestamp;
+        }
+      }
+    } else {
+      // Entry already exists, just update completion record
+      if (!completionRecord.completedSlots.includes(activeReminderSlotId)) {
+        completionRecord.completedSlots.push(activeReminderSlotId);
+        completionRecord.completedAt[activeReminderSlotId] = existingEntry.timestamp;
+      }
     }
 
+    setPrayerCompletionRecord(currentUser, completionRecord);
     setActiveReminderSlotId(null);
     setDismissedReminderSlotId(null);
   };

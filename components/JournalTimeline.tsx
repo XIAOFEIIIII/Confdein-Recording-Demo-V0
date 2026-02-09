@@ -3,6 +3,8 @@ import { JournalEntry } from '../types';
 import { format, startOfDay, startOfWeek, addDays, parse } from 'date-fns';
 import { Quote, Lock, Moon, BookOpen, ChevronRight, Loader2 } from 'lucide-react';
 
+const PRAYER_SLOT_LABEL: Record<string, string> = { morning: 'MORNING PRAYER', evening: 'EVENING REFLECTION' };
+
 /** Date key (yyyy-MM-dd) -> several distinct 0..1 seeds */
 function dateSeeds(dateKey: string): [number, number, number, number] {
   const parts = dateKey.split('-').map(Number);
@@ -200,7 +202,7 @@ const JournalTimeline: React.FC<JournalTimelineProps> = ({
         }}
       >
         {dayKeys.map((dayKey) => {
-          const dayEntries = groupedEntries[dayKey] ?? [];
+          const dayEntries = (groupedEntries[dayKey] ?? []).sort((a, b) => a.timestamp - b.timestamp);
           return (
             <div
               key={dayKey}
@@ -257,70 +259,38 @@ const JournalTimeline: React.FC<JournalTimelineProps> = ({
                         <span className="text-stone-300 font-mono" style={{ lineHeight: '32px', fontSize: '18px' }}>
                           {entry.moodLevel === 1 ? ':(' : entry.moodLevel === 2 ? ':/' : entry.moodLevel === 3 ? ':|' : entry.moodLevel === 4 ? ':)' : ':D'}
                         </span>
-                        <span className="text-stone-200/40" style={{ lineHeight: '32px' }}>|</span>
-                        {(() => {
-                          const stressLevel = getStressLevelAtTime(entry.timestamp);
-                          const state = getStressState(stressLevel);
-                          return (
-                            <span className={`${textTime} text-stone-300 lowercase`} style={{ lineHeight: '32px' }}>
-                              {state}
-                            </span>
-                          );
-                        })()}
                       </div>
-                      
+                      {/* Second line: prayer slot label only (uppercase, gray) */}
+                      {entry.isPrayerEntry && entry.prayerSlotId && (
+                        <div
+                          className={`${textMeta} text-stone-400/90 select-none uppercase tracking-wide`}
+                          style={{ height: '32px', lineHeight: '32px', margin: 0, padding: 0 }}
+                        >
+                          {PRAYER_SLOT_LABEL[entry.prayerSlotId] ?? entry.prayerSlotId}
+                        </div>
+                      )}
                       {/* Handwriting Content Area: title, then scripture line, then body */}
-                      <div 
-                        className="block"
-                        style={{ 
-                          lineHeight: '32px',
-                          margin: 0,
-                          padding: 0,
-                          display: 'flex',
-                          flexDirection: 'column',
-                          alignItems: 'flex-start'
-                        }}
-                      >
-                        {(() => {
-                          const idx = entry.transcript.indexOf('\n\n');
-                          const title = idx >= 0 ? entry.transcript.slice(0, idx) : entry.transcript;
-                          const body = idx >= 0 ? entry.transcript.slice(idx + 2) : '';
-                          const hasTitle = idx >= 0 && body.length > 0;
-                          return (
-                            <>
-                              <p 
-                                className={`handwriting text-stone-800 ${textMain} opacity-90 select-none whitespace-pre-line ${hasTitle ? 'journal-transcript' : ''}`}
-                                style={{
-                                  lineHeight: '32px',
-                                  margin: 0,
-                                  padding: 0,
-                                  display: 'block',
-                                  height: 'auto',
-                                  minHeight: '32px'
-                                }}
-                              >
-                                {title}
-                              </p>
-                              {entry.scripture && (
+                      {entry.transcript && (
+                        <div 
+                          className="block"
+                          style={{ 
+                            lineHeight: '32px',
+                            margin: 0,
+                            padding: 0,
+                            display: 'flex',
+                            flexDirection: 'column',
+                            alignItems: 'flex-start'
+                          }}
+                        >
+                          {(() => {
+                            const idx = entry.transcript.indexOf('\n\n');
+                            const title = idx >= 0 ? entry.transcript.slice(0, idx) : entry.transcript;
+                            const body = idx >= 0 ? entry.transcript.slice(idx + 2) : '';
+                            const hasTitle = idx >= 0 && body.length > 0;
+                            return (
+                              <>
                                 <p 
-                                  className={`handwriting text-stone-800 ${textScripture} opacity-90 select-none cursor-pointer hover:text-purple-600/70 transition-colors`}
-                                  onClick={() => {
-                                    onNavigateToVerse?.();
-                                  }}
-                                  style={{
-                                    lineHeight: '32px',
-                                    margin: 0,
-                                    padding: 0,
-                                    display: 'block',
-                                    minHeight: '32px'
-                                  }}
-                                >
-                                  {entry.scripture}
-                                </p>
-                              )}
-                              {body && (
-                                <p 
-                                  className={`handwriting text-stone-800 ${textMain} opacity-90 select-none whitespace-pre-line`}
+                                  className={`handwriting text-stone-800 ${textMain} opacity-90 select-none whitespace-pre-line ${hasTitle ? 'journal-transcript' : ''}`}
                                   style={{
                                     lineHeight: '32px',
                                     margin: 0,
@@ -330,13 +300,45 @@ const JournalTimeline: React.FC<JournalTimelineProps> = ({
                                     minHeight: '32px'
                                   }}
                                 >
-                                  {body}
+                                  {title}
                                 </p>
-                              )}
-                            </>
-                          );
-                        })()}
-                      </div>
+                                {entry.scripture && (
+                                  <p 
+                                    className={`handwriting text-stone-800 ${textScripture} opacity-90 select-none cursor-pointer hover:text-purple-600/70 transition-colors`}
+                                    onClick={() => {
+                                      onNavigateToVerse?.();
+                                    }}
+                                    style={{
+                                      lineHeight: '32px',
+                                      margin: 0,
+                                      padding: 0,
+                                      display: 'block',
+                                      minHeight: '32px'
+                                    }}
+                                  >
+                                    {entry.scripture}
+                                  </p>
+                                )}
+                                {body && (
+                                  <p 
+                                    className={`handwriting text-stone-800 ${textMain} opacity-90 select-none whitespace-pre-line`}
+                                    style={{
+                                      lineHeight: '32px',
+                                      margin: 0,
+                                      padding: 0,
+                                      display: 'block',
+                                      height: 'auto',
+                                      minHeight: '32px'
+                                    }}
+                                  >
+                                    {body}
+                                  </p>
+                                )}
+                              </>
+                            );
+                          })()}
+                        </div>
+                      )}
 
                       {/* Keywords: no gap from content */}
                       {entry.keywords && entry.keywords.length > 0 && (
