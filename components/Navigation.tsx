@@ -71,9 +71,9 @@ const Navigation: React.FC<NavigationProps> = ({ activeTab, setActiveTab, onReco
 
                   {item.icon && <item.icon size={18} strokeWidth={isActive ? 2 : 1.5} />}
 
-                  <span className={`text-[7px] font-bold uppercase tracking-[0.2em] mt-1 transition-opacity ${
+                  <span className={`text-[10px] font-medium mt-1 transition-opacity ${
                     isActive ? 'opacity-100' : 'opacity-70'
-                  }`}>
+                  }`} style={{ textTransform: 'capitalize' }}>
                     {item.label}
                   </span>
                 </button>
