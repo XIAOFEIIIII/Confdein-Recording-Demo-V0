@@ -77,8 +77,8 @@ const App: React.FC = () => {
   const [activeReminderSlotId, setActiveReminderSlotId] = useState<string | null>(null);
   const [dismissedReminderSlotId, setDismissedReminderSlotId] = useState<string | null>(null);
 
-  // Week timeline: default focus on 2026-01-25 (Sunday = index 0 in that week)
-  const defaultFocusDate = new Date(2026, 0, 25); // Jan 25, 2026
+  // Week timeline: default focus on 2026-01-18
+  const defaultFocusDate = new Date(2026, 0, 18); // Jan 18, 2026
   const defaultWeekStart = startOfWeek(defaultFocusDate, { weekStartsOn: 0 });
   const getDayIndexInWeek = (weekStart: Date, date: Date) => {
     const dateStr = format(startOfDay(date), 'yyyy-MM-dd');

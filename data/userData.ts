@@ -488,7 +488,7 @@ export function getStoredUserId(): CurrentUserId {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (raw === 'erica' || raw === 'roman') return raw;
   } catch (_) {}
-  return 'roman';
+  return 'erica';
 }
 
 export function setStoredUserId(id: CurrentUserId): void {
