@@ -77,8 +77,8 @@ const App: React.FC = () => {
   const [activeReminderSlotId, setActiveReminderSlotId] = useState<string | null>(null);
   const [dismissedReminderSlotId, setDismissedReminderSlotId] = useState<string | null>(null);
 
-  // Week timeline: default focus on 2026-01-18
-  const defaultFocusDate = new Date(2026, 0, 18); // Jan 18, 2026
+  // Week timeline: default focus — Angela 有按日灵修，默认选 2026-01-27 以便看到内容；Erica/Roman 用 2026-01-18
+  const defaultFocusDate = initial.currentUser === 'angela' ? new Date(2026, 0, 27) : new Date(2026, 0, 18);
   const defaultWeekStart = startOfWeek(defaultFocusDate, { weekStartsOn: 0 });
   const getDayIndexInWeek = (weekStart: Date, date: Date) => {
     const dateStr = format(startOfDay(date), 'yyyy-MM-dd');
@@ -90,10 +90,12 @@ const App: React.FC = () => {
   const [selectedWeekStart, setSelectedWeekStart] = useState(() => defaultWeekStart);
   const [selectedDayIndex, setSelectedDayIndex] = useState(() => getDayIndexInWeek(defaultWeekStart, defaultFocusDate));
 
-  // All dates that have at least one journal entry (for week timeline dots in any week)
+  // 周历打点：仅对“有内容”的日期打点（排除晨祷/晚祷，只算日记等非 prayer entry）
   const datesWithEntries = React.useMemo(() => {
     const set = new Set<string>();
-    entries.forEach(e => set.add(format(startOfDay(e.timestamp), 'yyyy-MM-dd')));
+    entries.forEach(e => {
+      if (!e.isPrayerEntry) set.add(format(startOfDay(e.timestamp), 'yyyy-MM-dd'));
+    });
     return set;
   }, [entries]);
 
@@ -132,6 +134,12 @@ const App: React.FC = () => {
         const weekStart = startOfWeek(new Date(latest.timestamp), { weekStartsOn: 0 });
         setSelectedWeekStart(weekStart);
         setSelectedDayIndex(getDayIndexInWeek(weekStart, new Date(latest.timestamp)));
+      } else if (currentUser === 'angela') {
+        // Angela 无日记时默认选有灵修的日期，便于看到 PDF 灵修内容
+        const angelaFocusDate = new Date(2026, 0, 27);
+        const angelaWeekStart = startOfWeek(angelaFocusDate, { weekStartsOn: 0 });
+        setSelectedWeekStart(angelaWeekStart);
+        setSelectedDayIndex(getDayIndexInWeek(angelaWeekStart, angelaFocusDate));
       } else {
         setSelectedWeekStart(startOfWeek(new Date(), { weekStartsOn: 0 }));
         setSelectedDayIndex(0);

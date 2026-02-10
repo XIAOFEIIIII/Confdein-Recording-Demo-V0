@@ -425,6 +425,7 @@ export function getDevotionalForUserAndDate(userId: CurrentUserId, dateStr: stri
   if (userId === 'erica' && ERICA_DEVOTIONAL_EMPTY_DATES.includes(dateStr)) return null;
   if (userId === 'erica' && ERICA_DEVOTIONAL_BY_DATE[dateStr]) return ERICA_DEVOTIONAL_BY_DATE[dateStr];
   if (userId === 'roman' && ROMAN_DEVOTIONAL_BY_DATE[dateStr]) return ROMAN_DEVOTIONAL_BY_DATE[dateStr];
+  if (userId === 'angela' && ANGELA_DEVOTIONAL_BY_DATE[dateStr]) return ANGELA_DEVOTIONAL_BY_DATE[dateStr];
   if (typeof window !== 'undefined' && localStorage.getItem(`devotional_unlocked_${dateStr}`) === 'true') {
     return u.devotional;
   }
@@ -447,6 +448,189 @@ const ROMAN_VERSES = [
   { verse: 'The Lord will fight for you, and you have only to be still.', reference: 'Exodus 14:14' },
 ];
 
+// Angela: 日记与灵修来自 PDF「Devotional for Angela」，方案 A（每天一条，timestamp 取当日最后 [HH:MM] 或 20:00）
+const ANGELA_ENTRIES: JournalEntry[] = [
+  {
+    id: 'angela-2025-12-11',
+    timestamp: new Date(2025, 11, 11, 19, 47).getTime(),
+    transcript: `心是话语的根源，如果我们的心真的是豆腐心我们不会忍心说出像刀子一样的话。比说出的话更重要的是内在语言，最大的神的话不是事实，是真理。事实会告诉你困难，神告诉你为他祷告在我手里没有难成的事。
+
+凭爱心说成实话，诚实化的原文是说出真理，活出真理才能说出真理。我们知道很多的事实，但是事实并不是真理，并且事实不是在任何时候都可以讲出来的，很多人喜欢说真实，很多人喜欢说实话，但是他们没有凭着爱心。
+
+做完全人的意思是做成熟的人在成熟的过程。`,
+    summary: '心与真理、凭爱心说实话。',
+    keywords: [],
+    mood: 'grateful',
+    moodLevel: 4,
+  },
+  {
+    id: 'angela-2025-12-19',
+    timestamp: new Date(2025, 11, 19, 20, 0).getTime(),
+    transcript: `"你的服侍就是对神的敬拜"。重要的是以神为中心的服侍，有没有继续对神保持柔软，继续放下，follow 神的计划，你要我做什么我就做什么。我们只能从神的爱里来做什么。不是要达到我心里完美的预期。小Z牧师特会洗了三天的碗，神调整她的心态。上好的福分不是嫁给高富帅，也不是娶了高白富美，而是遇见神。以马内利。有神同在。主耶稣更看重的是我们对他的爱。如果没有爱我们没办法真的服侍他。有神同在是一份产业，挪不走的。真正服侍不一定是别人看得到的。我求你让我一生住在你的殿中。雅威：我是。我是那位创造你从一而终不曾改变的神。你不是意外，你是刻意被造的。`,
+    summary: '服侍以神为中心、有神同在与刻意被造。',
+    keywords: [],
+    mood: 'grateful',
+    moodLevel: 4,
+  },
+  {
+    id: 'angela-2025-12-21',
+    timestamp: new Date(2025, 11, 21, 11, 36).getTime(),
+    transcript: `丁磊老师讲道：从小父母一直吵架，爸爸会拿刀砍妈妈，一刀下去鲜血直流，还会把手指掰断。11岁的时候父母终于离婚，妈妈带着我过着很苦的日子，经常吃晚上顿没有下顿，会去地里捡别人收割完剩下的白菜叶子吃。不久为了生存妈妈嫁给了另一个男人，在婚礼上我虽然理解妈妈是为了养活我才与别人建立家庭，但我感觉我是多余的，不应该存在这个地方。过了一年还是被我搅黄了，经过我的牵线爸爸又回到了一起，我期待爸爸不会像以前一样打妈妈，结果还是和以前一样。过了一年他们又离婚了，我也15岁了。过了一段时间妈妈查出来癌症晚期，三个月后就离世了。有人给我传福音跟我说耶稣爱你，我很不理解，我去到教会迫害教会，想看看他们什么反应，他们没有骂我也没有怪我。直到有一天神对我说话，我完全降服于他，将自己献上给他："世上的父母离弃你们，我耶和华永不离弃你"`,
+    summary: '丁磊老师讲道：破碎家庭与耶和华永不离弃。',
+    keywords: [],
+    mood: 'grateful',
+    moodLevel: 4,
+  },
+  {
+    id: 'angela-2025-12-30',
+    timestamp: new Date(2025, 11, 30, 20, 0).getTime(),
+    transcript: `鬼是最表面的东西，更多的问题是在一个人内心深处的苦毒、不饶恕、埋怨。他给我们的生命是丰盛的到永恒，不是只是活着。他渴望我们去认识他，要祝福我们有一个丰盛的生命。
+
+韩剧：如果连假的你都这么喜欢那真的呢。魔鬼最想偷走的是爱神爱人的心。`,
+    summary: '内心苦毒与丰盛生命、爱神爱人的心。',
+    keywords: [],
+    mood: 'grateful',
+    moodLevel: 4,
+  },
+  {
+    id: 'angela-2026-01-27',
+    timestamp: new Date(2026, 0, 27, 20, 0).getTime(),
+    transcript: `如果从没体会过神的同在又何谈顺服和摆上。与神相处是 one of the motivation。我们更应该靠意志力还是更应该靠与神的关系？相辅相成？`,
+    summary: '神的同在、顺服与和神的关系。',
+    keywords: [],
+    mood: 'grateful',
+    moodLevel: 4,
+  },
+  {
+    id: 'angela-2026-01-29',
+    timestamp: new Date(2026, 0, 29, 20, 5).getTime(),
+    transcript: `小小的事也可以有大大的赞美。越懂得感恩的人越喜乐。你不是一个暴躁抱怨的人，你只是不知道没有人教你如何去感恩。`,
+    summary: '感恩与喜乐、学习感恩。',
+    keywords: [],
+    mood: 'grateful',
+    moodLevel: 4,
+  },
+  {
+    id: 'angela-2026-02-03',
+    timestamp: new Date(2026, 1, 3, 22, 23).getTime(),
+    transcript: `you worry bc you worshiped the wrong thing。你追求的往往会成为让你焦虑的事情，只有追求神敬拜神他永远不会让你失望焦虑。好难过。好想和他说点什么但又好像不应该大家都说不应该不用练ai都说不不用。主啊求你帮助我 be determined。奉耶稣的名祷告阿门。选择大于努力。`,
+    summary: '忧虑与敬拜错误对象、求主帮助坚定。',
+    keywords: [],
+    mood: 'heavy',
+    moodLevel: 2,
+  },
+];
+
+const ANGELA_DEVOTIONAL: Devotional = {
+  verse: 'The Lord is near to all who call on him, to all who call on him in truth.',
+  reference: 'Psalm 145:18',
+  title: 'Near to All Who Call',
+  quote: 'God is never too far to hear; He is near to every sincere heart.',
+  reflection: `When we feel alone or distant from God, Scripture reminds us that He is not far off. The Lord is near to all who call on Him in truth. Our part is to call—sincerely, honestly, without pretense. He responds to the heart that seeks Him.
+
+Whatever you are carrying today, bring it to Him. He is near. He hears. He meets those who call on Him in truth.`,
+  prayer: `Lord, draw my heart to call on You in truth. When I feel far away, remind me that You are near. Thank You for hearing and for being present with all who seek You. Amen.`,
+  sections: [],
+};
+
+/** 2025-12-11 — 保守你心 (from PDF) */
+const ANGELA_DEVOTIONAL_2025_12_11: Devotional = {
+  verse: '你要保守你心，胜过保守一切，因为一生的果效是由心发出。',
+  reference: '箴言 4:23',
+  title: '保守你心',
+  quote: '守住你的心，胜过守住一切。',
+  reflection: `圣经提醒我们："你要保守你心，胜过保守一切，因为一生的果效是由心发出。"（箴4:23）我们的话语、行为、情绪，都不是随机流露，而是从我们的心发出。保罗也说，"我们若心里存着基督的平安，外面无论环境如何，都能心安"。保守心，就是让神的话语居首位、让神的话成为我们思想的尺度。不让愤怒、恐惧、不满或怀疑占据我们的思想空间，而是以神的真理更新我们的内心，使我们做出合神心意的选择和行动。`,
+  prayer: `主啊，求祢保守我的心不被忧虑、恐惧、愤怒或怀疑占据。求祢以祢真实的话语填满我的内心，使我的思想被祢真理更新。让我的生命行为从合乎祢心意的地方发出。愿我的心常存祢的平安和喜乐。奉主耶稣名，阿们。`,
+  sections: [],
+};
+
+/** 2025-12-19 — 服事 (from PDF) */
+const ANGELA_DEVOTIONAL_2025_12_19: Devotional = {
+  verse: '你们中间谁为大，就要作你们的用人。',
+  reference: '马太福音 20:26',
+  title: '服事以爱',
+  quote: '服事不是成就的累积，而是以爱去回应神与人的动机。',
+  reflection: `许多属灵领袖和信徒常被"服事必须成功"、"尽力做好工作"的心态驱使，却忽略了最根本的：服事不是为了成绩、名誉或人看见，而是因为我们曾被主耶稣深深爱过。耶稣说："你们中间谁为大，就要作你们的用人。"（太20:26）基督的服事不是居高临下的，而是谦卑、舍己、愿意成为别人背后的力量。真正的服事，是以爱为核心，而不是以效率和成就衡量。服事的动机决定服事的价值。若我们服事是为着神的荣耀和人的益处，那么无论我们做多少，都是蒙神悦纳的；若是为了被称赞、得到肯定、彰显自己，那即使看到外在成功，也是空虚。`,
+  prayer: `主啊，求祢使我服事的心真切、纯净，不为表现、成就或人的称赞，而是因为我知道祢先爱我。愿我在服事中看见祢的荣耀、看见人的需要，让我的双手和心与祢的一样，成为别人生命的祝福。奉主耶稣的名，阿们。`,
+  sections: [],
+};
+
+/** 2025-12-21 — 神与你同在 (from PDF) */
+const ANGELA_DEVOTIONAL_2025_12_21: Devotional = {
+  verse: '我必与你同在，你无论往哪里去，我必保守你。',
+  reference: '创世记 28:15',
+  title: '神与你同在',
+  quote: '神与你同在，你被祂深深爱着。',
+  reflection: `人最深的渴望不是被认可，而是被真心接纳。有些人来自破碎的家庭，被父母的争吵、离异、忽视或冷暴力伤害过。他们可能在年幼时就被迫成为"坚强者"，却内心深处渴望有人温柔地对他说一句："你值得被爱。"你经历了伤害、被赶走、被抛弃，这些不是不重要的痛，而是现实的痛。这样的经历常常让人自认多余，甚至怀疑自己是否有存在的价值。但神要你知道：你不是偶然被创造的，你不是失误里的产品。圣经中有一个真理特别宝贵："耶和华说：我必与你同在，你无论往哪里去，我必保守你。"（创世记28:15）这不是一种抽象的承诺，而是在你付不起代价、无处可依时仍与你同行的保证。神不会因为人的失败或冷漠而撤回祂的爱，也不会因为你过去的伤痕而拒绝拥抱你。你所经历的缺乏、痛苦和被忽略，并不是你价值的判决；正是在这些破碎中，神更要向你展示祂的慈爱和永不离弃。当你在痛苦中把真实的自己带到神面前，神不会拒绝你，也不会转脸；祂会用祂的爱覆盖你的伤口，用祂的应许抚平你心里的裂缝。今天，无论你的过去多么破碎，请记住：神与你同在，你被祂深深爱着。`,
+  prayer: `主啊，求祢告诉我：即使过去我被人忽视、被遗弃、被伤害，但在祢里面我不是多余的、不是失误的、不是孤单的。祢应许与我同在，祢记念我，祢看顾我。求祢用祢永恒的爱覆盖我心里每一个裂缝，让我在祢里面得到真正的归属、真正的平安、真正的身份。主啊，让我每天忆起祢的信实，让我知道在我最软弱、最破碎的时候，祢仍然坚定地爱我、接纳我、带领我。奉主耶稣基督的名，阿们。`,
+  sections: [],
+};
+
+/** 2025-12-30 — 全副军装 (from PDF) */
+const ANGELA_DEVOTIONAL_2025_12_30: Devotional = {
+  verse: '要穿戴神所赐的全副军装，使你们能抵挡魔鬼的诡计。',
+  reference: '以弗所书 6:11',
+  title: '全副军装',
+  quote: '神配备我们，不是让我们靠自己，而是靠着基督的力量。',
+  reflection: `保罗在以弗所书6章用很生动的比喻教导我们：我们不是与血肉之事争战，而是与属灵的邪恶势力争战。因此我们必须穿戴神所赐的全副军装。真理的带、正义的护心镜、和平的福音预备之鞋、信德作盾牌、救恩的头盔、神的话作为圣灵之剑…这不是象征，而是实际属灵真理。神配备我们，不是让我们靠自己，而是靠着基督的力量。当我们在祷告中带着信心、用神话语提醒自己的真理、抵挡恐惧和怀疑、以神的公义和救恩保护自己，我们就能够站立得稳，在属灵争战中得胜。`,
+  prayer: `主啊，我承认属灵的争战真实存在，魔鬼的诡计常试探、恐吓、怀疑我的信心。求祢帮助我穿戴祢所赐的全副军装：真理、正义、信德、救恩、福音的脚鞋、祢的话语和祷告。求祢使我能在争战中站立得稳，抵挡邪恶的试探，不被恐惧吞噬。愿我的信心不靠自己、而是靠照着祢的应许活出祢的力量。奉主耶稣名，阿们。`,
+  sections: [],
+};
+
+/** 2026-01-27 — 顺服的道路 (from PDF) */
+const ANGELA_DEVOTIONAL_2026_01_27: Devotional = {
+  verse: '顺服胜于献祭，听命胜于公羊的脂油。',
+  reference: '撒母耳记上 15:22',
+  title: '顺服的道路',
+  quote: '走顺服的道路，就是打属灵的仗。',
+  reflection: `一切真信主的人都愿意顺服神，但如果因为顺服神需要遭遇苦难，他们便畏缩不前了。绝大多数的信徒都愿意走顺服却不受苦的路，事实却不可能。因为这顺服的道路就是一个属灵的战场。战场是一个多有苦难危险的地方，顺服的道路上也是如此。在保罗所写的一段话语中我们可以看见这个真理："我现在被浇奠，我离世的时候到了。我已经打过了那美好的仗，我已经行完了我的道路，我已经保守了信心；从此以后，有公义的冠冕为我存留，就是按着公义审判的主到了那日要赐给我的；不但赐给我，也赐给凡爱慕祂显现的人。"（提摩太后书4:6‒8）注意，保罗所说"打过了那好的仗"与"行完了我的道路"是不能分开的。走顺服的路就是打属灵的仗。我们对神顺服，便是对魔鬼作战。因此走顺服的道路，便必须遭遇苦难。在这些苦难中，我们学习更大的顺服，更美的顺服。每一份顺服都是一次胜利。我们越肯顺服，我们的苦难就越增加；只要我们不退缩、不灰心，我们属灵的生命就越长进，我们也就越多得胜，越临近主所应许我们的荣耀。— 摘自今日灵修《顺服的道路是一个属灵战场》`,
+  prayer: `主啊，我们知道顺服不是一条容易的路，但我们也知道你在顺服的过程中与我们同行。求你帮助我们不因苦难退缩，教我们在困境中仍然紧紧地握住你的手，不靠自己的力量去顺服，而是靠着你赐给我们的力量和信心。愿我们的顺服不是出于恐惧、压力或表现的义务，而是源自对你深深的信靠与爱。求你加添我们的勇气，使我们在属灵的争战中站立得稳，不退缩、不灰心，直到看见荣耀。奉主耶稣的名，阿们。`,
+  sections: [],
+};
+
+/** 2026-01-29 — 感恩 (from PDF) */
+const ANGELA_DEVOTIONAL_2026_01_29: Devotional = {
+  verse: '要常常喜乐，不住地祷告，凡事谢恩，因为这是神在基督耶稣里向你们所定的旨意。',
+  reference: '帖撒罗尼迦前书 5:16–18',
+  title: '感恩',
+  quote: '感恩不是忽视环境，而是看见神在一切处的同在。',
+  reflection: `凡事谢恩是神给信徒的命令与福气。生活中我们往往容易因环境不顺、遭遇困难就心生埋怨，但神借使徒保罗教导我们："要常常喜乐，不住地祷告，凡事谢恩"（帖前5:16‒18）。不是祂忽略了我们的挣扎，而是祂希望我们明白：感恩并不是对困境的忽视，而是把一切带到神面前的呼求、信靠与回应。在感恩的祷告中，我们不再埋怨，而是在神的同在中经历喜乐。当我们常存感谢的心，我们就体验到神无处不在的恩典。无论是顺境还是逆境，因祂的信实与恩手伴随我们，我们有理由感谢。学习在日常生活中数算神的恩典，让心不断被祂更新，感恩就会成为我们与神持续的对话。感恩不是一时的情绪，而是对神日常同在的回应。当你把每件小事都交给神，你的心就会被祂的平安和喜乐充满。`,
+  prayer: `主啊，我们感谢祢在这一天所赐的一切恩典。即使在看似困难、失望或挫折之中，我们仍要以感谢的心来到祢面前。求祢教导我们不凭感觉，而是凭信心祷告；不因环境改变而喜乐，而是因看见祢在我们中间。求祢用感恩来更新我们的心，使我们在祷告中与祢更亲近，并让我们的喜乐因祢同在而恒常。阿们。`,
+  sections: [],
+};
+
+/** 2026-02-03 — 不要忧虑 (from PDF) */
+const ANGELA_DEVOTIONAL_2026_02_03: Devotional = {
+  verse: '所以，不要为明天忧虑，因为明天自有明天的忧虑；一天的难处一天当就够了。',
+  reference: '马太福音 6:34',
+  title: '不要忧虑',
+  quote: '不要为明天忧虑，把一切交托给掌权、慈爱的神。',
+  reflection: `耶稣在马太福音中清楚地说："不要为明天忧虑，因为明天自有明天的忧虑；一天的难处一天当就够了。"（太6:34）祂不是要我们忽略未来，也不是说我们不应规划生活或努力，而是告诉我们：忧虑不能改变任何事，它只会夺取我们的平安，模糊我们的信心视野。我们被呼召把担忧卸给神，把今天的心事与明天的未知都交托在祂手里。忧虑往往来自我们错误地把安全感放在自己计划、成就或信息控制之上，而神要我们把信任放在祂身上——因为祂是全知、全能、始终与我们同在的神。当我们把担忧交给神，我们获得真正的自由和平安。今天可能有忧虑，但神的同在和祂的慈爱仍然不断向我们彰显。`,
+  prayer: `主啊，祢知道我心中的忧虑、惧怕和疑惑。我承认我常试图靠自己掌控明天，靠计划、预期、努力来制造安全感。但主啊，我将这一切卸给祢，把我的焦虑放在祢慈爱的手中。求祢赐我不为明天忧虑的信心和平安，因为祢是我不变的磐石、我的供应与护卫。求祢使我的心在今天、在每个未知中，都能安然 resting in You。奉主耶稣的名，阿们。`,
+  sections: [],
+};
+
+const ANGELA_DEVOTIONAL_BY_DATE: Record<string, Devotional> = {
+  '2025-12-11': ANGELA_DEVOTIONAL_2025_12_11,
+  '2025-12-19': ANGELA_DEVOTIONAL_2025_12_19,
+  '2025-12-21': ANGELA_DEVOTIONAL_2025_12_21,
+  '2025-12-30': ANGELA_DEVOTIONAL_2025_12_30,
+  '2026-01-27': ANGELA_DEVOTIONAL_2026_01_27,
+  '2026-01-29': ANGELA_DEVOTIONAL_2026_01_29,
+  '2026-02-03': ANGELA_DEVOTIONAL_2026_02_03,
+};
+
+/** 有按日灵修的日期，用于周历上显示圆点（Angela） */
+export const ANGELA_DEVOTIONAL_DATES: string[] = Object.keys(ANGELA_DEVOTIONAL_BY_DATE);
+
+const ANGELA_VERSES = [
+  { verse: 'The Lord is near to all who call on him, to all who call on him in truth.', reference: 'Psalm 145:18' },
+  { verse: 'Cast all your anxiety on him because he cares for you.', reference: '1 Peter 5:7' },
+  { verse: 'For I know the plans I have for you, declares the Lord, plans for welfare and not for evil.', reference: 'Jeremiah 29:11' },
+  { verse: 'Come to me, all who labor and are heavy laden, and I will give you rest.', reference: 'Matthew 11:28' },
+  { verse: 'Peace I leave with you; my peace I give to you.', reference: 'John 14:27' },
+];
+
 const USER_DATA: Record<CurrentUserId, UserInitialData> = {
   erica: {
     entries: ERICA_ENTRIES,
@@ -464,6 +648,13 @@ const USER_DATA: Record<CurrentUserId, UserInitialData> = {
     // Set avatarUrl to e.g. '/avatars/roman.jpg' (Filipino male) when you have the image in public/avatars/
     avatarUrl: undefined,
   },
+  angela: {
+    entries: ANGELA_ENTRIES,
+    devotional: ANGELA_DEVOTIONAL,
+    verses: ANGELA_VERSES,
+    avatarSeed: 'Angela',
+    avatarUrl: undefined,
+  },
 };
 
 const DICEBEAR_NOTIONISTS = 'https://api.dicebear.com/7.x/notionists/svg';
@@ -478,6 +669,7 @@ export function getProfiles(): UserProfile[] {
   return [
     { id: 'erica', displayName: 'Erica', avatarSeed: USER_DATA.erica.avatarSeed, avatarUrl: USER_DATA.erica.avatarUrl },
     { id: 'roman', displayName: 'Roman', avatarSeed: USER_DATA.roman.avatarSeed, avatarUrl: USER_DATA.roman.avatarUrl },
+    { id: 'angela', displayName: 'Angela', avatarSeed: USER_DATA.angela.avatarSeed, avatarUrl: USER_DATA.angela.avatarUrl },
   ];
 }
 
@@ -486,7 +678,7 @@ const STORAGE_KEY = 'confidein_current_user';
 export function getStoredUserId(): CurrentUserId {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw === 'erica' || raw === 'roman') return raw;
+    if (raw === 'erica' || raw === 'roman' || raw === 'angela') return raw;
   } catch (_) {}
   return 'erica';
 }

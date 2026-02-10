@@ -48,7 +48,7 @@ export interface Devotional {
   sections?: Array<{ title: string; content: string }>;
 }
 
-export type CurrentUserId = 'erica' | 'roman';
+export type CurrentUserId = 'erica' | 'roman' | 'angela';
 
 export interface UserProfile {
   id: CurrentUserId;
