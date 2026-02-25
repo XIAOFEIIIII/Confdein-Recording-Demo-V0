@@ -674,6 +674,15 @@ const App: React.FC = () => {
           setActiveTab(AppTab.JOURNAL);
           handleEntryClick(entry);
         }}
+        settingsProps={{
+          currentUser,
+          onSwitchUser: handleSwitchUser,
+          prayerReminderSettings,
+          onUpdatePrayerReminderSettings: (settings) => {
+            setPrayerReminderSettingsState(settings);
+            setPrayerReminderSettings(currentUser, settings);
+          },
+        }}
       />
 
       {/* 
@@ -934,18 +943,6 @@ const App: React.FC = () => {
               <div className="animate-in fade-in slide-in-from-right-4 duration-500 max-w-2xl" key={selectedDateStr}>
                 <StressDashboard selectedDateKey={selectedDateStr} onStartMeditation={() => setShowMeditation(true)} />
               </div>
-            )}
-
-            {activeTab === AppTab.SETTINGS && (
-              <Settings 
-                currentUser={currentUser} 
-                onSwitchUser={handleSwitchUser}
-                prayerReminderSettings={prayerReminderSettings}
-                onUpdatePrayerReminderSettings={(settings) => {
-                  setPrayerReminderSettingsState(settings);
-                  setPrayerReminderSettings(currentUser, settings);
-                }}
-              />
             )}
 
             {activeTab === AppTab.DEVOTIONAL && (

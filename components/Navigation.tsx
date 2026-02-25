@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { BookOpen, Activity, Moon, Settings, Mic, Square, Loader2, X } from 'lucide-react';
-import { AppTab, JournalEntry, CurrentUserId } from '../types';
+import { BookOpen, Activity, Moon, Mic, Square, Loader2, X } from 'lucide-react';
+import { AppTab, JournalEntry, CurrentUserId, PrayerReminderSettings } from '../types';
 import { format, isToday, isYesterday, startOfDay } from 'date-fns';
 import { getAvatarSrc } from '../data/userData';
+import Settings from './Settings';
 
 interface NavigationProps {
   isOpen: boolean;
@@ -19,6 +20,12 @@ interface NavigationProps {
   avatarUrl?: string;
   avatarSeed: string;
   onEntrySelect?: (entry: JournalEntry) => void;
+  settingsProps: {
+    currentUser: CurrentUserId;
+    onSwitchUser: (userId: CurrentUserId) => void;
+    prayerReminderSettings: PrayerReminderSettings | null;
+    onUpdatePrayerReminderSettings: (settings: PrayerReminderSettings) => void;
+  };
 }
 
 const USER_DISPLAY_NAMES: Record<CurrentUserId, string> = {
@@ -54,6 +61,7 @@ const Navigation: React.FC<NavigationProps> = ({
   avatarUrl,
   avatarSeed,
   onEntrySelect,
+  settingsProps,
 }) => {
   const [isRecording, setIsRecording] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -89,13 +97,6 @@ const Navigation: React.FC<NavigationProps> = ({
   const showListening     = isRecordingFromApp ?? isRecording;
   const showTranscribing  = isProcessingAny && !showListening;
 
-  const navItems = [
-    { id: AppTab.JOURNAL,    icon: BookOpen, label: 'Journal' },
-    { id: AppTab.HEALTH,     icon: Activity, label: 'Stress' },
-    { id: AppTab.DEVOTIONAL, icon: Moon,     label: 'Devotional' },
-    { id: AppTab.SETTINGS,   icon: Settings, label: 'Settings' },
-  ];
-
   // Recents: non-prayer entries, most recent first
   const recentEntries = entries
     .filter(e => !e.isPrayerEntry)
@@ -115,7 +116,7 @@ const Navigation: React.FC<NavigationProps> = ({
         }`}
       />
 
-      {/* Sidebar panel */}
+      {/* Sidebar panel: settings-focused */}
       <div
         className={`fixed left-0 top-0 bottom-0 z-50 w-[82%] max-w-[320px] flex flex-col bg-[#faf9f5] transition-transform duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] ${
           isOpen ? 'translate-x-0' : '-translate-x-full'
@@ -135,83 +136,64 @@ const Navigation: React.FC<NavigationProps> = ({
           </button>
         </div>
 
-        {/* ── Nav items ── */}
-        <nav className="px-3 space-y-0.5">
-          {navItems.map(item => {
+        {/* ── Settings content ── */}
+        <div className="flex-1 min-h-0 overflow-y-auto no-scrollbar px-4 pb-4">
+          <Settings
+            currentUser={settingsProps.currentUser}
+            onSwitchUser={settingsProps.onSwitchUser}
+            prayerReminderSettings={settingsProps.prayerReminderSettings}
+            onUpdatePrayerReminderSettings={settingsProps.onUpdatePrayerReminderSettings}
+          />
+        </div>
+      </div>
+
+      {/* Bottom tab bar + separate record button (like previous design) */}
+      <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 flex items-center gap-3">
+        <nav className="flex items-center h-14 bg-[#f5f4ed]/95 backdrop-blur-xl rounded-full px-2 shadow-[0_18px_40px_rgba(0,0,0,0.08)]">
+          {[
+            { id: AppTab.JOURNAL, icon: BookOpen, label: 'Journal' },
+            { id: AppTab.HEALTH, icon: Activity, label: 'Stress' },
+            { id: AppTab.DEVOTIONAL, icon: Moon, label: 'Devo' },
+          ].map(item => {
             const isActive = activeTab === item.id;
             return (
-              <button
-                key={item.id}
-                onClick={() => { setActiveTab(item.id); onClose(); }}
-                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-[15px] transition-colors ${
-                  isActive
-                    ? 'bg-[#f5f4ed] text-[#141413] font-medium'
-                    : 'text-[#141413]/70 hover:bg-[#f5f4ed] hover:text-[#141413]'
-                }`}
-              >
-                <item.icon size={18} strokeWidth={isActive ? 2 : 1.5} />
-                <span>{item.label}</span>
-              </button>
+                <button
+                  key={item.id}
+                  onClick={() => setActiveTab(item.id)}
+                  className={`relative flex flex-col items-center justify-center gap-1 px-6 h-11 rounded-full text-[11px] transition-all ${
+                    isActive
+                      ? 'bg-[#faf9f5] text-[#141413] shadow-[0_8px_20px_rgba(0,0,0,0.08)]'
+                      : 'text-[#141413]/70 hover:text-[#141413]'
+                  }`}
+                >
+                  <item.icon size={18} strokeWidth={isActive ? 2 : 1.5} />
+                  <span className="leading-none">{item.label}</span>
+                </button>
             );
           })}
         </nav>
 
-        {/* ── Recents ── */}
-        <div className="mt-5 flex-1 min-h-0 flex flex-col">
-          <span className="px-6 mb-2 text-[11px] font-medium text-[#141413]/40 uppercase tracking-wider">
-            Recents
-          </span>
-          <div className="flex-1 overflow-y-auto no-scrollbar px-3 space-y-0.5 pb-4">
-            {recentEntries.map(entry => (
-              <button
-                key={entry.id}
-                onClick={() => { onEntrySelect?.(entry); onClose(); }}
-                className="w-full text-left px-3 py-2 rounded-xl hover:bg-[#f5f4ed] transition-colors group"
-              >
-                <p className="text-[15px] text-[#141413] leading-snug line-clamp-1">
-                  {getEntryTitle(entry)}
-                </p>
-                <p className="text-[11px] text-[#141413]/35 mt-0.5">
-                  {getEntryDateLabel(entry.timestamp)}
-                </p>
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* ── Bottom: user + record ── */}
-        <div className="border-t border-[#1f1e1d1a] px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
-            <img
-              src={avatarSrc}
-              alt={displayName}
-              className="w-8 h-8 rounded-full bg-[#f5f4ed] object-cover"
-            />
-            <span className="text-[14px] font-medium text-[#141413]">{displayName}</span>
-          </div>
-
-          {/* Record button */}
-          <button
-            onClick={handleRecordToggle}
-            disabled={isProcessingAny}
-            className={`w-12 h-12 rounded-full flex items-center justify-center transition-all duration-200 active:scale-95 shadow-sm ${
-              isRecordingAny
-                ? 'bg-[#141413] text-[#faf9f5]'
-                : isProcessingAny
-                  ? 'bg-[#f5f4ed] text-[#141413]/35 cursor-not-allowed'
-                  : 'bg-[#F26D3D] text-white hover:bg-[#e85f2e]'
-            }`}
-            aria-label="Record"
-          >
-            {isProcessingAny ? (
-              <Loader2 className="animate-spin" size={20} />
-            ) : isRecordingAny ? (
-              <Square size={16} fill="currentColor" />
-            ) : (
-              <Mic size={20} strokeWidth={1.5} />
-            )}
-          </button>
-        </div>
+        {/* Record button as separate circle */}
+        <button
+          onClick={handleRecordToggle}
+          disabled={isProcessingAny}
+          className={`w-12 h-12 rounded-full flex items-center justify-center transition-all duration-200 active:scale-95 shadow-[0_18px_40px_rgba(0,0,0,0.10)] ${
+            isRecordingAny
+              ? 'bg-[#141413] text-[#faf9f5]'
+              : isProcessingAny
+                ? 'bg-[#f5f4ed] text-[#141413]/35 cursor-not-allowed'
+                : 'bg-[#faf9f5] text-[#141413] hover:bg-[#f5f4ed]'
+          }`}
+          aria-label="Record"
+        >
+          {isProcessingAny ? (
+            <Loader2 className="animate-spin" size={20} />
+          ) : isRecordingAny ? (
+            <Square size={16} fill="currentColor" />
+          ) : (
+            <Mic size={20} strokeWidth={1.5} />
+          )}
+        </button>
       </div>
 
       {/* Floating status label (shown when sidebar is closed) */}
