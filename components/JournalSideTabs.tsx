@@ -34,8 +34,8 @@ const JournalSideTabs: React.FC<JournalSideTabsProps> = ({ value, onChange }) =>
               relative w-7 flex items-center justify-center transition-all duration-300
               rounded-l-md shadow-sm
               ${isActive
-                ? `h-28 ${colors.active} text-[#4a3a33] shadow-[0_8px_20px_rgba(74,58,51,0.08)] z-10`
-                : `h-20 ${colors.inactive} text-[#4a3a33]/85 hover:text-[#4a3a33] z-0`
+                ? `h-28 ${colors.active} text-[#141413] shadow-[0_8px_20px_rgba(0,0,0,0.06)] z-10`
+                : `h-20 ${colors.inactive} text-[#141413]/85 hover:text-[#141413] z-0`
               }
             `}
           >

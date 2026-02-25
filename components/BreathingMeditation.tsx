@@ -33,7 +33,7 @@ const BreathingMeditation: React.FC<BreathingMeditationProps> = ({ onClose }) =>
   const duration = Math.floor(elapsed / 1000);
 
   return (
-    <div className="fixed inset-0 z-[200] bg-[#fbfbfa] flex flex-col items-center justify-center">
+    <div className="fixed inset-0 z-[200] bg-[#faf9f5] flex flex-col items-center justify-center">
       <style>{`
         @keyframes breath-cycle {
           0%   { transform: scale(0.65); opacity: 0.4; }
@@ -49,29 +49,29 @@ const BreathingMeditation: React.FC<BreathingMeditationProps> = ({ onClose }) =>
 
       <button
         onClick={onClose}
-        className="absolute top-6 right-6 p-2 text-[#4a3a33]/20 hover:text-[#4a3a33]/40 transition-colors z-10"
+        className="absolute top-6 right-6 p-2 text-[#141413]/20 hover:text-[#141413]/40 transition-colors z-10"
         aria-label="Close"
       >
         <X size={18} />
       </button>
 
       <div className="flex flex-col items-center gap-10 px-6">
-        <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-[#4a3a33]/50">
+        <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-[#141413]/50">
           Pause for a minute
         </p>
 
         <div className="relative flex items-center justify-center w-56 h-56">
           <div
-            className="breath-circle absolute w-40 h-40 rounded-full border-2 border-[#4a3a33]/20"
-            style={{ background: 'radial-gradient(circle, rgba(74,58,51,0.06) 0%, transparent 70%)' }}
+            className="breath-circle absolute w-40 h-40 rounded-full border-2 border-[#141413]/20"
+            style={{ background: 'radial-gradient(circle, rgba(0,0,0,0.04) 0%, transparent 70%)' }}
           />
         </div>
 
-        <p className="text-[14px] font-medium text-[#4a3a33] tabular-nums">
+        <p className="text-[14px] font-medium text-[#141413] tabular-nums">
           {phaseLabel}
         </p>
 
-        <p className="text-[12px] text-[#4a3a33]/50 tabular-nums">
+        <p className="text-[12px] text-[#141413]/50 tabular-nums">
           {duration}s
         </p>
       </div>

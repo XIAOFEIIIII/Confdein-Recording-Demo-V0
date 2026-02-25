@@ -103,8 +103,8 @@ const StressDashboard: React.FC<StressDashboardProps> = ({ selectedDateKey, onSt
     <div className="py-4 flex flex-col gap-6">
       <div className="space-y-4">
         <div>
-          <h3 className="text-[#4a3a33]/45 text-[10px] font-bold uppercase tracking-widest mb-1">State of Heart</h3>
-          <p className="text-2xl font-semibold text-[#4a3a33]">Quiet Waters</p>
+          <h3 className="text-[#141413]/45 text-[10px] font-bold uppercase tracking-widest mb-1">State of Heart</h3>
+          <p className="text-[16px] font-semibold text-[#141413]">Quiet Waters</p>
         </div>
         
         <div className="h-36 w-full">
@@ -112,18 +112,18 @@ const StressDashboard: React.FC<StressDashboardProps> = ({ selectedDateKey, onSt
             <AreaChart data={chartData}>
               <defs>
                 <linearGradient id="colorLevel" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#4a3a33" stopOpacity={0.07}/>
-                  <stop offset="95%" stopColor="#4a3a33" stopOpacity={0}/>
+                  <stop offset="5%" stopColor="#141413" stopOpacity={0.07}/>
+                  <stop offset="95%" stopColor="#141413" stopOpacity={0}/>
                 </linearGradient>
               </defs>
               <Tooltip 
-                cursor={{ stroke: '#e3e1dc', strokeWidth: 1 }}
+                cursor={{ stroke: '#1f1e1d66', strokeWidth: 1 }}
                 contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 8px 16px rgba(0,0,0,0.05)', backgroundColor: 'rgba(255,255,255,0.9)' }}
               />
               <Area 
                 type="monotone" 
                 dataKey="level" 
-                stroke="#4a3a33" 
+                stroke="#141413" 
                 strokeWidth={1}
                 fillOpacity={1} 
                 fill="url(#colorLevel)" 
@@ -132,39 +132,39 @@ const StressDashboard: React.FC<StressDashboardProps> = ({ selectedDateKey, onSt
             </AreaChart>
           </ResponsiveContainer>
         </div>
-        <div className="flex justify-between text-[9px] text-[#4a3a33]/45 font-bold uppercase tracking-widest">
+        <div className="flex justify-between text-[10px] text-[#141413]/45 font-bold uppercase tracking-widest">
           <span>Rise</span>
           <span>Noon</span>
           <span>Now</span>
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-6 border-t border-[#e3e1dc] pt-6">
+      <div className="grid grid-cols-2 gap-6 border-t border-[#1f1e1d66] pt-6">
         <div>
-          <p className="text-[#4a3a33]/45 text-[9px] font-bold uppercase tracking-widest mb-2">HRV Score</p>
+          <p className="text-[#141413]/45 text-[10px] font-bold uppercase tracking-widest mb-2">HRV Score</p>
           <div className="flex items-baseline gap-1">
-            <p className="text-3xl font-normal text-[#4a3a33]">84</p>
-            <span className="text-[10px] text-[#4a3a33]/45 font-bold uppercase">ms</span>
+            <p className="text-[16px] font-normal text-[#141413]">84</p>
+            <span className="text-[10px] text-[#141413]/45 font-bold uppercase">ms</span>
           </div>
         </div>
         <div>
-          <p className="text-[#4a3a33]/45 text-[9px] font-bold uppercase tracking-widest mb-2">Daily Load</p>
-          <p className="text-3xl font-normal text-[#4a3a33]">Gentle</p>
+          <p className="text-[#141413]/45 text-[10px] font-bold uppercase tracking-widest mb-2">Daily Load</p>
+          <p className="text-[16px] font-normal text-[#141413]">Gentle</p>
         </div>
       </div>
 
       {isStressed && (
-        <div className="border-t border-[#e3e1dc] pt-6">
+        <div className="border-t border-[#1f1e1d66] pt-6">
           <div className="flex items-center justify-between gap-2 mb-2">
             <div className="flex items-center gap-2">
-              <BookOpen size={14} className="text-[#4a3a33]/45" />
-              <p className="text-[#4a3a33]/45 text-[9px] font-bold uppercase tracking-widest">When you’re stressed</p>
+              <BookOpen size={14} className="text-[#141413]/45" />
+              <p className="text-[#141413]/45 text-[10px] font-bold uppercase tracking-widest">When you’re stressed</p>
             </div>
             <div className="flex items-center gap-0.5">
               <button
                 type="button"
                 onClick={goPrevVerse}
-                className="p-2 text-[#4a3a33]/45 hover:text-[#4a3a33] hover:bg-[#4a3a33]/5 rounded-full transition-colors"
+                className="p-2 text-[#141413]/45 hover:text-[#141413] hover:bg-[#141413]/5 rounded-full transition-colors"
                 aria-label="Previous verse"
               >
                 <ChevronLeft size={16} />
@@ -172,16 +172,16 @@ const StressDashboard: React.FC<StressDashboardProps> = ({ selectedDateKey, onSt
               <button
                 type="button"
                 onClick={goNextVerse}
-                className="p-2 text-[#4a3a33]/45 hover:text-[#4a3a33] hover:bg-[#4a3a33]/5 rounded-full transition-colors"
+                className="p-2 text-[#141413]/45 hover:text-[#141413] hover:bg-[#141413]/5 rounded-full transition-colors"
                 aria-label="Next verse"
               >
                 <ChevronRight size={16} />
               </button>
             </div>
           </div>
-          <div className="bg-[#f6f5f3]/50 rounded-2xl p-4 shadow-sm h-[120px] flex flex-col overflow-hidden">
-            <p className="melrose-text text-[#4a3a33] overflow-y-auto flex-1 min-h-0">"{recommendedVerse.verse}"</p>
-            <p className="text-[10px] font-bold uppercase tracking-[0.4em] text-[#4a3a33]/45 mt-2 flex-shrink-0">
+          <div className="bg-[#f5f4ed]/50 rounded-2xl p-4 shadow-sm h-[120px] flex flex-col overflow-hidden">
+            <p className="melrose-text text-[#141413] overflow-y-auto flex-1 min-h-0">"{recommendedVerse.verse}"</p>
+            <p className="text-[10px] font-bold uppercase tracking-[0.4em] text-[#141413]/45 mt-2 flex-shrink-0">
               — {recommendedVerse.reference}
             </p>
           </div>
@@ -191,9 +191,9 @@ const StressDashboard: React.FC<StressDashboardProps> = ({ selectedDateKey, onSt
       <button
         type="button"
         onClick={onStartMeditation}
-        className="w-full bg-[#f6f5f3]/50 text-[#4a3a33] h-14 rounded-2xl text-[10px] font-bold uppercase tracking-[0.3em] flex items-center justify-center gap-3 hover:bg-[#f6f5f3]/70 transition-all group shadow-sm"
+        className="w-full bg-[#f5f4ed]/50 text-[#141413] h-14 rounded-2xl text-[10px] font-bold uppercase tracking-[0.3em] flex items-center justify-center gap-3 hover:bg-[#f5f4ed]/70 transition-all group shadow-sm"
       >
-        <Wind size={16} className="text-[#4a3a33]/45 group-hover:rotate-90 transition-transform duration-1000" />
+        <Wind size={16} className="text-[#141413]/45 group-hover:rotate-90 transition-transform duration-1000" />
         Pause for a Minute
       </button>
     </div>

@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import { format, startOfWeek, addDays } from 'date-fns';
+import { format, startOfWeek, addDays, isToday } from 'date-fns';
 import { Check } from 'lucide-react';
 
 const WEEK_STARTS_ON = 0; // Sunday, must match JournalTimeline
@@ -69,7 +69,7 @@ const WeekTimeline: React.FC<WeekTimelineProps> = ({
   return (
     <div
       ref={scrollRef}
-      className="flex-shrink-0 flex overflow-x-auto snap-x snap-mandatory no-scrollbar border-b border-[#e9e8e6] bg-[#fbfbfa]"
+      className="flex-shrink-0 flex overflow-x-auto snap-x snap-mandatory no-scrollbar border-b border-[#1f1e1d26]"
       style={{ scrollSnapType: 'x mandatory', WebkitOverflowScrolling: 'touch' }}
     >
       {weeks.map((weekStart) => {
@@ -83,6 +83,7 @@ const WeekTimeline: React.FC<WeekTimelineProps> = ({
             <div className="w-full max-w-4xl px-8 flex items-center justify-between gap-1">
             {days.map((day, index) => {
               const isSelected = selectedDayIndex === index;
+              const isTodayDay = isToday(day);
               const dayKey = format(day, 'yyyy-MM-dd');
               const hasEntry = datesWithEntries.has(dayKey);
               return (
@@ -91,29 +92,34 @@ const WeekTimeline: React.FC<WeekTimelineProps> = ({
                   key={day.getTime()}
                   onClick={() => onDayClick(index)}
                   className={`flex flex-col items-center justify-center min-w-[2.5rem] py-2 px-1 rounded-xl transition-colors ${
-                    isSelected ? 'bg-[#e9e8e6]/80' : 'hover:bg-[#e9e8e6]/40'
+                    isSelected ? 'bg-[#f5f4ed]' : 'hover:bg-[#1f1e1d26]/40'
                   }`}
                 >
                   <span
-                    className={`text-[11px] font-semibold uppercase tracking-wider ${
-                      isSelected ? 'text-[#4a3a33]' : hasEntry ? 'text-[#4a3a33]/75' : 'text-[#4a3a33]/45'
+                    className={`text-[12px] uppercase tracking-wider ${
+                      isTodayDay ? 'font-bold' : 'font-semibold'
+                    } ${
+                      isTodayDay ? 'text-[#141413]' : hasEntry ? 'text-[#141413]/75' : 'text-[#141413]/45'
                     }`}
                   >
                     {format(day, 'EEEE').slice(0, 2)}
                   </span>
                   <span
-                    className={`text-[12px] font-bold mt-0.5 ${
-                      isSelected ? 'text-[#4a3a33]' : hasEntry ? 'text-[#4a3a33]/75' : 'text-[#4a3a33]/45'
+                    className={`text-[12px] mt-0.5 ${
+                      isTodayDay ? 'font-extrabold' : 'font-bold'
+                    } ${
+                      isTodayDay ? 'text-[#141413]' : hasEntry ? 'text-[#141413]/75' : 'text-[#141413]/45'
                     }`}
                   >
                     {format(day, 'dd')}
                   </span>
-                  {hasEntry && !isSelected && (
-                    <span className="w-1.5 h-1.5 rounded-full bg-[#4a3a33]/40 mt-1" aria-hidden />
-                  )}
-                  {isSelected && (
-                    <Check size={12} className="text-[#4a3a33] mt-1 stroke-[2.5]" />
-                  )}
+                  {/* 对勾行常驻，保持高度一致 */}
+                  <span className="mt-1 h-3 flex items-center justify-center">
+                    {hasEntry
+                      ? <Check size={12} className="text-[#141413]/50 stroke-[2.5]" />
+                      : <span className="w-1 h-1 rounded-full bg-[#141413]/25" />
+                    }
+                  </span>
                 </button>
               );
             })}

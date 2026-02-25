@@ -87,11 +87,11 @@ const ImmersiveReader: React.FC<ImmersiveReaderProps> = ({ title, content, onClo
   }, [totalPages]);
 
   return (
-    <div className="fixed inset-0 z-[200] bg-[#fbfbfa] flex flex-col">
+    <div className="fixed inset-0 z-[200] bg-[#faf9f5] flex flex-col">
       {/* Close button */}
       <button
         onClick={onClose}
-        className="absolute top-6 right-6 p-2 text-[#4a3a33]/20 hover:text-[#4a3a33]/40 transition-colors z-10"
+        className="absolute top-6 right-6 p-2 text-[#141413]/20 hover:text-[#141413]/40 transition-colors z-10"
         aria-label="Close"
       >
         <X size={18} />
@@ -105,8 +105,8 @@ const ImmersiveReader: React.FC<ImmersiveReaderProps> = ({ title, content, onClo
               key={idx}
               className={`h-1 rounded-full transition-all ${
                 idx === currentPage
-                  ? 'bg-[#4a3a33] flex-1 max-w-[40px]'
-                  : 'bg-[#4a3a33]/20 flex-1 max-w-[40px]'
+                  ? 'bg-[#141413] flex-1 max-w-[40px]'
+                  : 'bg-[#141413]/20 flex-1 max-w-[40px]'
               }`}
             />
           ))}
@@ -126,7 +126,7 @@ const ImmersiveReader: React.FC<ImmersiveReaderProps> = ({ title, content, onClo
             style={{ minWidth: '100%' }}
           >
             <div className="max-w-2xl w-full py-12">
-              <p className="melrose-text text-[#4a3a33] whitespace-pre-line leading-relaxed">
+              <p className="melrose-text text-[#141413] whitespace-pre-line leading-relaxed">
                 {paragraph}
               </p>
             </div>
@@ -140,7 +140,7 @@ const ImmersiveReader: React.FC<ImmersiveReaderProps> = ({ title, content, onClo
           {currentPage > 0 && (
             <button
               onClick={handlePrev}
-              className="absolute left-6 top-1/2 -translate-y-1/2 p-3 bg-[#f6f5f3]/70 backdrop-blur-sm rounded-full text-[#4a3a33]/50 hover:text-[#4a3a33] hover:bg-[#f6f5f3]/90 transition-all shadow-sm"
+              className="absolute left-6 top-1/2 -translate-y-1/2 p-3 bg-[#f5f4ed]/70 backdrop-blur-sm rounded-full text-[#141413]/50 hover:text-[#141413] hover:bg-[#f5f4ed]/90 transition-all shadow-sm"
               aria-label="Previous"
             >
               <ChevronLeft size={20} />
@@ -149,7 +149,7 @@ const ImmersiveReader: React.FC<ImmersiveReaderProps> = ({ title, content, onClo
           {currentPage < totalPages - 1 && (
             <button
               onClick={handleNext}
-              className="absolute right-6 top-1/2 -translate-y-1/2 p-3 bg-[#f6f5f3]/70 backdrop-blur-sm rounded-full text-[#4a3a33]/50 hover:text-[#4a3a33] hover:bg-[#f6f5f3]/90 transition-all shadow-sm"
+              className="absolute right-6 top-1/2 -translate-y-1/2 p-3 bg-[#f5f4ed]/70 backdrop-blur-sm rounded-full text-[#141413]/50 hover:text-[#141413] hover:bg-[#f5f4ed]/90 transition-all shadow-sm"
               aria-label="Next"
             >
               <ChevronRight size={20} />

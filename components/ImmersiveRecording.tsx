@@ -27,7 +27,7 @@ const ImmersiveRecording: React.FC<ImmersiveRecordingProps> = ({ onStop, onCance
   };
 
   return (
-    <div className="fixed inset-0 z-[100] bg-[#fbfbfa] flex flex-col items-center justify-center">
+    <div className="fixed inset-0 z-[100] bg-[#faf9f5] flex flex-col items-center justify-center">
       <style>{`
         @keyframes gentle-pulse {
           0%, 100% { opacity: 0.1; transform: scale(1); }
@@ -40,7 +40,7 @@ const ImmersiveRecording: React.FC<ImmersiveRecordingProps> = ({ onStop, onCance
       {/* Close button */}
       <button
         onClick={onCancel}
-        className="absolute top-6 right-6 p-2 text-[#4a3a33]/50 hover:text-[#4a3a33] transition-colors"
+        className="absolute top-6 right-6 p-2 text-[#141413]/50 hover:text-[#141413] transition-colors"
       >
         <X size={18} />
       </button>
@@ -51,18 +51,18 @@ const ImmersiveRecording: React.FC<ImmersiveRecordingProps> = ({ onStop, onCance
         <div className="flex flex-col items-center gap-3">
           <div className="relative">
             {/* Pulsing circle */}
-            <div className="absolute inset-0 rounded-full bg-[#4a3a33] pulse-circle" />
-            <div className="relative w-24 h-24 rounded-full bg-[#4a3a33]/20 flex items-center justify-center">
-              <div className="w-8 h-8 rounded-full bg-[#4a3a33]/40" />
+            <div className="absolute inset-0 rounded-full bg-[#141413] pulse-circle" />
+            <div className="relative w-24 h-24 rounded-full bg-[#141413]/20 flex items-center justify-center">
+              <div className="w-8 h-8 rounded-full bg-[#141413]/40" />
             </div>
           </div>
 
           {/* Recording text */}
           <div className="text-center">
-            <p className="text-[9px] font-bold uppercase tracking-[0.3em] text-[#4a3a33]/60 mb-2">
+            <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-[#141413]/60 mb-2">
               Recording
             </p>
-            <p className="text-2xl font-light text-[#4a3a33] tabular-nums">
+            <p className="text-[16px] font-light text-[#141413] tabular-nums">
               {formatTime(recordingTime)}
             </p>
           </div>
@@ -71,7 +71,7 @@ const ImmersiveRecording: React.FC<ImmersiveRecordingProps> = ({ onStop, onCance
         {/* Stop button */}
         <button
           onClick={onStop}
-          className="px-8 py-3 bg-[#f6f5f3]/55 backdrop-blur-3xl text-[#4a3a33] rounded-full text-[9px] font-bold uppercase tracking-[0.2em] hover:bg-[#f0efed]/70 transition-all duration-300 shadow-[0_8px_32px_rgba(74,58,51,0.08)]"
+          className="px-8 py-3 bg-[#f5f4ed]/55 backdrop-blur-3xl text-[#141413] rounded-full text-[16px] font-bold uppercase tracking-[0.2em] hover:bg-[#ffffff]/70 transition-all duration-300 shadow-[0_8px_32px_rgba(0,0,0,0.06)]"
         >
           Stop Recording
         </button>

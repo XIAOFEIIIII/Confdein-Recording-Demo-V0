@@ -107,34 +107,34 @@ const Settings: React.FC<SettingsProps> = ({
   return (
     <div className="animate-in fade-in slide-in-from-right-4 duration-500 max-w-2xl py-6 flex flex-col gap-4">
       {/* Prayer Reminder Entry */}
-      <div className="bg-[#f6f5f3]/40 rounded-2xl overflow-hidden">
+      <div className="bg-[#f5f4ed]/40 rounded-2xl overflow-hidden">
         <button
           type="button"
           onClick={() => setExpandedSection(expandedSection === 'prayer' ? null : 'prayer')}
-          className="w-full flex items-center gap-4 p-4 text-left transition-all hover:bg-[#f6f5f3]/60"
+          className="w-full flex items-center gap-4 p-4 text-left transition-all hover:bg-[#f5f4ed]/60"
         >
-          <div className="flex-shrink-0 w-10 h-10 rounded-full bg-[#4a3a33]/10 flex items-center justify-center">
-            <Bell size={18} className="text-[#4a3a33]" />
+          <div className="flex-shrink-0 w-10 h-10 rounded-full bg-[#141413]/10 flex items-center justify-center">
+            <Bell size={18} className="text-[#141413]" />
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-[#4a3a33] font-semibold text-[15px]">
+            <p className="text-[#141413] font-semibold text-[16px]">
               Prayer Reminder
             </p>
-            <p className="text-[#4a3a33]/50 text-[13px]">
+            <p className="text-[#141413]/50 text-[14px]">
               {prayerReminderSettings.enabled 
                 ? `${enabledSlotsCount} reminder${enabledSlotsCount !== 1 ? 's' : ''} enabled`
                 : 'Disabled'}
             </p>
           </div>
           {expandedSection === 'prayer' ? (
-            <ChevronDown size={20} className="text-[#4a3a33]/50 flex-shrink-0" />
+            <ChevronDown size={20} className="text-[#141413]/50 flex-shrink-0" />
           ) : (
-            <ChevronRight size={20} className="text-[#4a3a33]/50 flex-shrink-0" />
+            <ChevronRight size={20} className="text-[#141413]/50 flex-shrink-0" />
           )}
         </button>
 
         {expandedSection === 'prayer' && (
-          <div className="px-4 pb-4 pt-2 border-t border-[#4a3a33]/10">
+          <div className="px-4 pb-4 pt-2 border-t border-[#141413]/10">
             <div className="flex flex-col gap-3">
               {sortedSlots.map((slot) => {
             const isEditing = editingSlotId === slot.id;
@@ -142,7 +142,7 @@ const Settings: React.FC<SettingsProps> = ({
             return (
               <div
                 key={slot.id}
-                className="flex items-center gap-3 p-3 bg-[#f6f5f3]/40 rounded-xl"
+                className="flex items-center gap-3 p-3 bg-[#f5f4ed]/40 rounded-xl"
               >
                 {isEditing ? (
                   <>
@@ -150,7 +150,7 @@ const Settings: React.FC<SettingsProps> = ({
                       type="text"
                       value={editLabel}
                       onChange={(e) => setEditLabel(e.target.value)}
-                      className="flex-1 px-2 py-1 text-[15px] bg-white border border-[#4a3a33]/20 rounded"
+                      className="flex-1 px-2 py-1 text-[16px] bg-white border border-[#141413]/20 rounded"
                       placeholder="Label"
                     />
                     <input
@@ -159,30 +159,30 @@ const Settings: React.FC<SettingsProps> = ({
                       max="23"
                       value={editHour}
                       onChange={(e) => setEditHour(parseInt(e.target.value) || 0)}
-                      className="w-16 px-2 py-1 text-[15px] bg-white border border-[#4a3a33]/20 rounded"
+                      className="w-16 px-2 py-1 text-[16px] bg-white border border-[#141413]/20 rounded"
                       placeholder="Hour"
                     />
-                    <span className="text-[#4a3a33]/50">:</span>
+                    <span className="text-[#141413]/50">:</span>
                     <input
                       type="number"
                       min="0"
                       max="59"
                       value={editMinute}
                       onChange={(e) => setEditMinute(parseInt(e.target.value) || 0)}
-                      className="w-16 px-2 py-1 text-[15px] bg-white border border-[#4a3a33]/20 rounded"
+                      className="w-16 px-2 py-1 text-[16px] bg-white border border-[#141413]/20 rounded"
                       placeholder="Min"
                     />
                     <button
                       type="button"
                       onClick={handleSaveEdit}
-                      className="p-1 text-[#4a3a33] hover:bg-[#4a3a33]/10 rounded"
+                      className="p-1 text-[#141413] hover:bg-[#141413]/10 rounded"
                     >
                       <Check size={16} />
                     </button>
                     <button
                       type="button"
                       onClick={handleCancelEdit}
-                      className="p-1 text-[#4a3a33] hover:bg-[#4a3a33]/10 rounded"
+                      className="p-1 text-[#141413] hover:bg-[#141413]/10 rounded"
                     >
                       <X size={16} />
                     </button>
@@ -190,10 +190,10 @@ const Settings: React.FC<SettingsProps> = ({
                 ) : (
                   <>
                     <div className="flex-1">
-                      <p className="text-[#4a3a33] text-[15px] font-medium">
+                      <p className="text-[#141413] text-[16px] font-medium">
                         {slot.label}
                       </p>
-                      <p className="text-[#4a3a33]/50 text-[13px]">
+                      <p className="text-[#141413]/50 text-[14px]">
                         {String(slot.hour).padStart(2, '0')}:{String(slot.minute).padStart(2, '0')}
                       </p>
                     </div>
@@ -201,7 +201,7 @@ const Settings: React.FC<SettingsProps> = ({
                       type="button"
                       onClick={() => handleToggleSlotEnabled(slot.id)}
                       className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${
-                        slot.enabled ? 'bg-[#4a3a33]/20' : 'bg-[#4a3a33]/10'
+                        slot.enabled ? 'bg-[#141413]/20' : 'bg-[#141413]/10'
                       }`}
                     >
                       <span
@@ -217,12 +217,12 @@ const Settings: React.FC<SettingsProps> = ({
           })}
 
           {isAddingNew ? (
-            <div className="flex items-center gap-3 p-3 bg-[#f6f5f3]/60 rounded-xl">
+            <div className="flex items-center gap-3 p-3 bg-[#f5f4ed]/60 rounded-xl">
               <input
                 type="text"
                 value={newSlotLabel}
                 onChange={(e) => setNewSlotLabel(e.target.value)}
-                className="flex-1 px-2 py-1 text-[15px] bg-white border border-[#4a3a33]/20 rounded"
+                className="flex-1 px-2 py-1 text-[16px] bg-white border border-[#141413]/20 rounded"
                 placeholder="Label"
               />
               <input
@@ -231,24 +231,24 @@ const Settings: React.FC<SettingsProps> = ({
                 max="23"
                 value={newSlotHour}
                 onChange={(e) => setNewSlotHour(parseInt(e.target.value) || 0)}
-                className="w-16 px-2 py-1 text-[15px] bg-white border border-[#4a3a33]/20 rounded"
+                className="w-16 px-2 py-1 text-[16px] bg-white border border-[#141413]/20 rounded"
                 placeholder="Hour"
               />
-              <span className="text-[#4a3a33]/50">:</span>
+              <span className="text-[#141413]/50">:</span>
               <input
                 type="number"
                 min="0"
                 max="59"
                 value={newSlotMinute}
                 onChange={(e) => setNewSlotMinute(parseInt(e.target.value) || 0)}
-                className="w-16 px-2 py-1 text-[15px] bg-white border border-[#4a3a33]/20 rounded"
+                className="w-16 px-2 py-1 text-[16px] bg-white border border-[#141413]/20 rounded"
                 placeholder="Min"
               />
               <button
                 type="button"
                 onClick={handleAddSlot}
                 disabled={!newSlotLabel.trim()}
-                className="p-1 text-[#4a3a33] hover:bg-[#4a3a33]/10 rounded disabled:opacity-40"
+                className="p-1 text-[#141413] hover:bg-[#141413]/10 rounded disabled:opacity-40"
               >
                 <Check size={16} />
               </button>
@@ -258,7 +258,7 @@ const Settings: React.FC<SettingsProps> = ({
                   setIsAddingNew(false);
                   setNewSlotLabel('');
                 }}
-                className="p-1 text-[#4a3a33] hover:bg-[#4a3a33]/10 rounded"
+                className="p-1 text-[#141413] hover:bg-[#141413]/10 rounded"
               >
                 <X size={16} />
               </button>
@@ -267,10 +267,10 @@ const Settings: React.FC<SettingsProps> = ({
             <button
               type="button"
               onClick={() => setIsAddingNew(true)}
-              className="flex items-center gap-2 p-3 bg-[#f6f5f3]/40 hover:bg-[#f6f5f3]/60 rounded-xl text-[#4a3a33] transition-colors"
+              className="flex items-center gap-2 p-3 bg-[#f5f4ed]/40 hover:bg-[#f5f4ed]/60 rounded-xl text-[#141413] transition-colors"
             >
               <Plus size={16} />
-              <span className="text-[15px]">Add time slot</span>
+              <span className="text-[16px]">Add time slot</span>
             </button>
           )}
             </div>
@@ -279,33 +279,33 @@ const Settings: React.FC<SettingsProps> = ({
       </div>
 
       {/* Account Switch Entry */}
-      <div className="bg-[#f6f5f3]/40 rounded-2xl overflow-hidden">
+      <div className="bg-[#f5f4ed]/40 rounded-2xl overflow-hidden">
         <button
           type="button"
           onClick={() => setExpandedSection(expandedSection === 'account' ? null : 'account')}
-          className="w-full flex items-center gap-4 p-4 text-left transition-all hover:bg-[#f6f5f3]/60"
+          className="w-full flex items-center gap-4 p-4 text-left transition-all hover:bg-[#f5f4ed]/60"
         >
-          <div className="flex-shrink-0 w-10 h-10 rounded-full bg-[#4a3a33]/10 flex items-center justify-center">
-            <Users size={18} className="text-[#4a3a33]" />
+          <div className="flex-shrink-0 w-10 h-10 rounded-full bg-[#141413]/10 flex items-center justify-center">
+            <Users size={18} className="text-[#141413]" />
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-[#4a3a33] font-semibold text-[15px]">
+            <p className="text-[#141413] font-semibold text-[16px]">
               Account Switch
             </p>
-            <p className="text-[#4a3a33]/50 text-[13px]">
+            <p className="text-[#141413]/50 text-[14px]">
               Currently: {activeProfile?.displayName || 'Unknown'}
             </p>
           </div>
           {expandedSection === 'account' ? (
-            <ChevronDown size={20} className="text-[#4a3a33]/50 flex-shrink-0" />
+            <ChevronDown size={20} className="text-[#141413]/50 flex-shrink-0" />
           ) : (
-            <ChevronRight size={20} className="text-[#4a3a33]/50 flex-shrink-0" />
+            <ChevronRight size={20} className="text-[#141413]/50 flex-shrink-0" />
           )}
         </button>
 
         {expandedSection === 'account' && (
-          <div className="px-4 pb-4 pt-2 border-t border-[#4a3a33]/10">
-            <p className="text-[#4a3a33]/50 text-[13px] mb-4">
+          <div className="px-4 pb-4 pt-2 border-t border-[#141413]/10">
+            <p className="text-[#141413]/50 text-[14px] mb-4">
               Switch whose journal, devotional, and verses you see. No login—just pick a profile.
             </p>
             <div className="flex flex-col gap-3">
@@ -318,8 +318,8 @@ const Settings: React.FC<SettingsProps> = ({
                     onClick={() => onSwitchUser(profile.id)}
                     className={`w-full flex items-center gap-4 p-4 rounded-xl text-left transition-all ${
                       isActive
-                        ? 'bg-[#f6f5f3]/80 shadow-sm ring-1 ring-[#4a3a33]/10'
-                        : 'bg-[#f6f5f3]/40 hover:bg-[#f6f5f3]/60'
+                        ? 'bg-[#f5f4ed]/80 shadow-sm ring-1 ring-[#141413]/10'
+                        : 'bg-[#f5f4ed]/40 hover:bg-[#f5f4ed]/60'
                     }`}
                   >
                     <div className="w-12 h-12 rounded-full overflow-hidden bg-white border border-stone-100 shadow-sm flex-shrink-0 flex items-center justify-center p-0.5">
@@ -330,16 +330,16 @@ const Settings: React.FC<SettingsProps> = ({
                       />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-[#4a3a33] font-semibold text-[15px]">
+                      <p className="text-[#141413] font-semibold text-[16px]">
                         {profile.displayName}
                       </p>
-                      <p className="text-[#4a3a33]/50 text-[13px]">
+                      <p className="text-[#141413]/50 text-[14px]">
                         {profile.id === 'erica' ? 'Journal, devo & verses (default)' : 'Different journal, devo & verses'}
                       </p>
                     </div>
                     {isActive && (
-                      <div className="flex-shrink-0 w-8 h-8 rounded-full bg-[#4a3a33]/10 flex items-center justify-center">
-                        <Check size={16} className="text-[#4a3a33]" strokeWidth={2.5} />
+                      <div className="flex-shrink-0 w-8 h-8 rounded-full bg-[#141413]/10 flex items-center justify-center">
+                        <Check size={16} className="text-[#141413]" strokeWidth={2.5} />
                       </div>
                     )}
                   </button>

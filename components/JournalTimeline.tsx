@@ -101,14 +101,14 @@ const JournalTimeline: React.FC<JournalTimelineProps> = ({
   generatingDevotionalForDate = null,
   onNavigateToVerse,
 }) => {
-  const textMain = useRomanFont ? 'text-[17px]' : 'text-[15px]';
-  const textScripture = useRomanFont ? 'text-[15px]' : 'text-[13px]';
-  const textTime = useRomanFont ? 'text-[13px]' : 'text-[12px]';
-  const textMeta = useRomanFont ? 'text-[13px]' : 'text-[12px]';
+  const textMain = 'text-[14px]';
+  const textScripture = 'text-[14px]';
+  const textTime = useRomanFont ? 'text-[14px]' : 'text-[12px]';
+  const textMeta = useRomanFont ? 'text-[14px]' : 'text-[12px]';
   const [currentPageIndex, setCurrentPageIndex] = useState(0);
-  const scrollContainerRef = useRef<HTMLDivElement>(null);
-  const [isScrolling, setIsScrolling] = useState(false);
+  const [isAnimating, setIsAnimating] = useState(false);
   const scrollToDayIndexRef = useRef<number | null>(null);
+  const touchStartXRef = useRef<number>(0);
 
   const today = new Date();
   const weekStart = weekStartProp ?? startOfWeek(today, { weekStartsOn: WEEK_STARTS_ON });
@@ -137,81 +137,75 @@ const JournalTimeline: React.FC<JournalTimelineProps> = ({
     setInitialized(true);
   }, [todayIndex, initialized]);
 
-  // Scroll to day when parent sets scrollToDayIndex (e.g. week timeline click)
-  useEffect(() => {
-    if (scrollToDayIndex == null || scrollToDayIndex === scrollToDayIndexRef.current) return;
-    if (scrollToDayIndex === currentPageIndex) {
-      scrollToDayIndexRef.current = scrollToDayIndex;
-      return;
-    }
-    scrollToDayIndexRef.current = scrollToDayIndex;
-    const container = scrollContainerRef.current;
-    if (!container) return;
-    setIsScrolling(true);
-    container.scrollTo({
-      left: scrollToDayIndex * container.clientWidth,
-      behavior: 'smooth'
-    });
-    setCurrentPageIndex(scrollToDayIndex);
-    onPageChange?.(scrollToDayIndex);
-    setTimeout(() => setIsScrolling(false), 500);
-  }, [scrollToDayIndex, currentPageIndex, onPageChange]);
-
-  // Update current page when user scrolls (with snap, each swipe lands on one page)
-  useEffect(() => {
-    const container = scrollContainerRef.current;
-    if (!container) return;
-
-    const handleScroll = () => {
-      if (isScrolling) return;
-      const scrollLeft = container.scrollLeft;
-      const pageWidth = container.clientWidth;
-      const newPageIndex = Math.round(scrollLeft / pageWidth);
-      if (newPageIndex !== currentPageIndex && newPageIndex >= 0 && newPageIndex < 7) {
-        setCurrentPageIndex(newPageIndex);
-        onPageChange?.(newPageIndex);
-      }
-    };
-
-    container.addEventListener('scroll', handleScroll, { passive: true });
-    return () => container.removeEventListener('scroll', handleScroll);
-  }, [currentPageIndex, isScrolling, onPageChange]);
-
-  const handlePageIndicatorClick = (index: number) => {
-    const container = scrollContainerRef.current;
-    if (!container) return;
-    setIsScrolling(true);
-    container.scrollTo({
-      left: index * container.clientWidth,
-      behavior: 'smooth'
-    });
+  // Navigate to a page using CSS transform (no native scroll needed)
+  const goToPage = (index: number) => {
+    if (isAnimating) return;
+    setIsAnimating(true);
     setCurrentPageIndex(index);
     onPageChange?.(index);
-    setTimeout(() => setIsScrolling(false), 500);
+    scrollToDayIndexRef.current = index;
+    setTimeout(() => setIsAnimating(false), 320);
+  };
+
+  // Respond to parent-driven day selection (WeekTimeline click)
+  useEffect(() => {
+    if (scrollToDayIndex == null || scrollToDayIndex === scrollToDayIndexRef.current) return;
+    scrollToDayIndexRef.current = scrollToDayIndex;
+    setCurrentPageIndex(scrollToDayIndex);
+    onPageChange?.(scrollToDayIndex);
+  }, [scrollToDayIndex, onPageChange]);
+
+  const findNextWithEntries = (from: number, direction: 1 | -1): number | null => {
+    let i = from + direction;
+    while (i >= 0 && i < 7) {
+      if ((groupedEntries[dayKeys[i]]?.length ?? 0) > 0) return i;
+      i += direction;
+    }
+    return null;
+  };
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStartXRef.current = e.touches[0].clientX;
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (isAnimating) return;
+    const deltaX = e.changedTouches[0].clientX - touchStartXRef.current;
+    if (Math.abs(deltaX) < 30) return;
+    const direction = deltaX < 0 ? 1 : -1;
+    const target = findNextWithEntries(currentPageIndex, direction as 1 | -1);
+    if (target !== null) goToPage(target);
+  };
+
+  const handlePageIndicatorClick = (index: number) => {
+    goToPage(index);
   };
 
   return (
     <div className="w-full h-full flex flex-col" style={{ height: '100%' }}>
       <div
-        ref={scrollContainerRef}
-        className="flex-1 flex overflow-x-auto snap-x snap-mandatory no-scrollbar"
-        style={{
-          scrollSnapType: 'x mandatory',
-          WebkitOverflowScrolling: 'touch',
-          height: '100%'
-        }}
+        className="flex-1 overflow-hidden relative"
+        onTouchStart={handleTouchStart}
+        onTouchEnd={handleTouchEnd}
+        style={{ height: '100%' }}
       >
+        {/* 内层用 transform 滑动，无原生滚动依赖 */}
+        <div
+          className="flex h-full"
+          style={{
+            transform: `translateX(${-currentPageIndex * 100}%)`,
+            transition: isAnimating ? 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)' : 'none',
+            willChange: 'transform',
+          }}
+        >
         {dayKeys.map((dayKey) => {
-          const dayEntries = (groupedEntries[dayKey] ?? []).sort((a, b) => a.timestamp - b.timestamp);
+          // 每天内部：按时间倒序（越新越靠上）
+          const dayEntries = (groupedEntries[dayKey] ?? []).sort((a, b) => b.timestamp - a.timestamp);
           return (
             <div
               key={dayKey}
-              className="flex-shrink-0 w-full h-full snap-start"
-              style={{
-                width: '100%',
-                minWidth: '100%',
-                height: '100%'
-              }}
+              className="flex-shrink-0 h-full"
+              style={{ width: '100vw', minWidth: '100vw', height: '100%' }}
             >
               {/* Each day page - scrollable vertically; grid on this element so it scrolls with content */}
               <div
@@ -221,7 +215,7 @@ const JournalTimeline: React.FC<JournalTimelineProps> = ({
                   marginTop: '0px',
                   height: '100%',
                   backgroundImage: `
-                    repeating-linear-gradient(#fbfbfa, #fbfbfa 31px, #e9e8e6 31px, #e9e8e6 32px)
+                    repeating-linear-gradient(#faf9f5, #faf9f5 31px, #1f1e1d26 31px, #1f1e1d26 32px)
                   `,
                   backgroundSize: '100% 32px',
                   backgroundAttachment: 'local',
@@ -231,7 +225,7 @@ const JournalTimeline: React.FC<JournalTimelineProps> = ({
                 {dayEntries.length === 0 ? (
                   <div className="flex flex-col items-center justify-center py-24 px-6 text-stone-300">
                     <Quote size={28} className="opacity-20 mb-4" />
-                    <p className={`handwriting ${useRomanFont ? 'text-lg' : 'text-base'} text-center italic opacity-50`}>
+                    <p className={`handwriting text-[14px] text-center italic opacity-50`}>
                       The page is waiting for your voice...
                     </p>
                   </div>
@@ -262,6 +256,54 @@ const JournalTimeline: React.FC<JournalTimelineProps> = ({
                           {entry.moodLevel === 1 ? ':(' : entry.moodLevel === 2 ? ':/' : entry.moodLevel === 3 ? ':|' : entry.moodLevel === 4 ? ':)' : ':D'}
                         </span>
                       </div>
+                      {/* Ring-sync status rows (Transmitting / Transcribing) — 静态示意用 */}
+                      {entry.ringStatus === 'transmitting' && (
+                        <div
+                          className="flex flex-col justify-center"
+                          style={{
+                            height: '32px',
+                            margin: 0,
+                            padding: 0,
+                          }}
+                        >
+                          <div className="w-full h-1.5 rounded-full bg-stone-200 overflow-hidden mb-1">
+                            <div className="h-full w-2/3 bg-stone-400 rounded-full" />
+                          </div>
+                          <p
+                            className={`${textMeta} text-stone-400`}
+                            style={{
+                              lineHeight: '16px',
+                              margin: 0,
+                              padding: 0,
+                            }}
+                          >
+                            Transmitting...
+                          </p>
+                        </div>
+                      )}
+                      {entry.ringStatus === 'transcribing' && (
+                        <div
+                          className="flex items-center gap-2 text-stone-300"
+                          style={{
+                            height: '32px',
+                            margin: 0,
+                            padding: 0,
+                          }}
+                        >
+                          <span
+                            className="inline-flex items-center justify-center rounded-full border border-stone-300/70"
+                            style={{ width: '16px', height: '16px' }}
+                          >
+                            <span className="w-1.5 h-1.5 rounded-full bg-stone-300/70" />
+                          </span>
+                          <span
+                            className={`${textMeta} text-stone-400`}
+                            style={{ lineHeight: '16px' }}
+                          >
+                            Transcribing...
+                          </span>
+                        </div>
+                      )}
                       {/* Handwriting Content Area: title, then scripture line, then body */}
                       {entry.transcript && (
                         <div 
@@ -426,7 +468,7 @@ const JournalTimeline: React.FC<JournalTimelineProps> = ({
                               )}
                             </span>
                             <span 
-                              className={`handwriting ${useRomanFont ? 'text-[15px]' : 'text-[14px]'} ${isGenerating ? 'text-purple-700/70' : canUnlock || isUnlocked ? 'text-purple-800/80' : 'text-purple-600/50'}`}
+                              className={`handwriting text-[14px] ${isGenerating ? 'text-purple-700/70' : canUnlock || isUnlocked ? 'text-purple-800/80' : 'text-purple-600/50'}`}
                               style={{ lineHeight: '32px' }}
                             >
                               {isGenerating 
@@ -437,7 +479,7 @@ const JournalTimeline: React.FC<JournalTimelineProps> = ({
                             </span>
                             {!canUnlock && !isUnlocked && !isGenerating && (
                               <span 
-                                className={`handwriting text-purple-500/60 ${useRomanFont ? 'text-[13px]' : 'text-[12px]'} italic`}
+                                className={`handwriting text-purple-500/60 text-[12px] italic`}
                                 style={{ lineHeight: '32px', marginLeft: '8px' }}
                               >
                                 {!hasEntries ? 'need at least 1 entry to unlock' : 'available after 9pm'}
@@ -458,6 +500,7 @@ const JournalTimeline: React.FC<JournalTimelineProps> = ({
             </div>
           );
         })}
+        </div>{/* end transform inner */}
       </div>
     </div>
   );

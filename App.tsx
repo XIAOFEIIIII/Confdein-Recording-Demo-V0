@@ -15,7 +15,7 @@ import PrayerReminderBanner from './components/PrayerReminderBanner';
 import { getStoredUserId, setStoredUserId, getInitialDataForUser, getAvatarSrc, getDevotionalForUserAndDate, getPrayerReminderSettings, setPrayerReminderSettings, getPrayerCompletionRecord, setPrayerCompletionRecord } from './data/userData';
 import { analyzeJournalEntry, generatePersonalizedDevotional } from './services/geminiService';
 import { fetchVerseText } from './services/bibleService';
-import { Search, Settings as SettingsIcon, Plus, Trash2, ChevronRight } from 'lucide-react';
+import { Search, AlignJustify, Plus, Trash2, ChevronRight } from 'lucide-react';
 import { subDays, subHours, format, startOfWeek, addDays, startOfDay, isToday } from 'date-fns';
 
 const now = Date.now();
@@ -76,6 +76,8 @@ const App: React.FC = () => {
   const [prayerReminderSettings, setPrayerReminderSettingsState] = useState<PrayerReminderSettings>(() => getPrayerReminderSettings(initial.currentUser));
   const [activeReminderSlotId, setActiveReminderSlotId] = useState<string | null>(null);
   const [dismissedReminderSlotId, setDismissedReminderSlotId] = useState<string | null>(null);
+  const [ringSyncState, setRingSyncState] = useState<'idle' | 'transmitting' | 'transcribing'>('idle');
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   // Week timeline: default focus — Angela 有按日灵修，默认选 2026-01-27 以便看到内容；Erica/Roman 用 2026-01-18
   const defaultFocusDate = initial.currentUser === 'angela' ? new Date(2026, 0, 27) : new Date(2026, 0, 18);
@@ -145,6 +147,29 @@ const App: React.FC = () => {
         setSelectedDayIndex(0);
       }
     }
+  }, [currentUser]);
+
+  // Mock ring-synced entries transmitting / transcribing states (for demo)
+  useEffect(() => {
+    // Only show this demo flow for Angela, whose entries come from ring recordings
+    if (currentUser !== 'angela') {
+      setRingSyncState('idle');
+      return;
+    }
+
+    setRingSyncState('transmitting');
+    const toTranscribing = setTimeout(() => {
+      setRingSyncState('transcribing');
+    }, 1500);
+
+    const toIdle = setTimeout(() => {
+      setRingSyncState('idle');
+    }, 3500);
+
+    return () => {
+      clearTimeout(toTranscribing);
+      clearTimeout(toIdle);
+    };
   }, [currentUser]);
 
   const handleSwitchUser = (userId: CurrentUserId) => {
@@ -619,7 +644,7 @@ const App: React.FC = () => {
   const totalCount = enabledSlots.length;
 
   return (
-    <div className="fixed inset-0 bg-[#fbfbfa] selection:bg-[#4a3a33] selection:text-[#fbfbfa] no-scrollbar overflow-hidden flex flex-col">
+    <div className="fixed inset-0 bg-[#faf9f5] selection:bg-[#141413] selection:text-[#ffffff] no-scrollbar overflow-hidden flex flex-col">
       {/* Prayer Reminder Banner */}
       {activeReminderSlot && (
         <PrayerReminderBanner
@@ -631,34 +656,43 @@ const App: React.FC = () => {
         />
       )}
       
-      {!showMeditation && !showReader && !editingEntry && (
-        <Navigation 
-          activeTab={activeTab} 
-          setActiveTab={setActiveTab} 
-          onRecordFinish={handleNewRecord}
-          onStartRecording={() => setShowImmersiveRecording(true)}
-          isRecordingFromApp={showImmersiveRecording}
-          isProcessingFromApp={isProcessingRecording}
-        />
-      )}
+      <Navigation
+        isOpen={sidebarOpen}
+        onClose={() => setSidebarOpen(false)}
+        activeTab={activeTab}
+        setActiveTab={setActiveTab}
+        onRecordFinish={handleNewRecord}
+        onStartRecording={() => setShowImmersiveRecording(true)}
+        isRecordingFromApp={showImmersiveRecording}
+        isProcessingFromApp={isProcessingRecording}
+        ringSyncState={ringSyncState}
+        entries={entries}
+        currentUser={currentUser}
+        avatarUrl={avatarUrl}
+        avatarSeed={avatarSeed}
+        onEntrySelect={(entry) => {
+          setActiveTab(AppTab.JOURNAL);
+          handleEntryClick(entry);
+        }}
+      />
 
       {/* 
         Fixed Header: Exactly 96px (3 lines of 32px)
       */}
       {!showMeditation && !showReader && !editingEntry && (
-      <header className="h-14 px-10 flex justify-between items-center relative z-20 bg-[#fbfbfa] flex-shrink-0">
+      <header className="h-14 px-10 flex justify-between items-center relative z-20 bg-[#faf9f5] flex-shrink-0">
         <button
           type="button"
-          onClick={() => setActiveTab(AppTab.SETTINGS)}
-          className="p-2 -ml-2 text-[#4a3a33]/35 hover:text-[#4a3a33] transition-colors"
-          aria-label="Settings"
+          onClick={() => setSidebarOpen(true)}
+          className="p-2 -ml-2 text-[#141413]/35 hover:text-[#141413] transition-colors"
+          aria-label="Menu"
         >
-          <SettingsIcon size={18} />
+          <AlignJustify size={18} />
         </button>
-        <h1 className="title text-xl font-semibold text-[#4a3a33] tracking-tight leading-none absolute left-1/2 -translate-x-1/2">
+        <h1 className="text-[16px] font-semibold text-[#141413] tracking-tight leading-none absolute left-1/2 -translate-x-1/2">
           {getHeaderDateLabel()}
         </h1>
-        <button className="p-2 text-[#4a3a33]/35 hover:text-[#4a3a33] transition-colors" aria-label="Search">
+        <button className="p-2 text-[#141413]/35 hover:text-[#141413] transition-colors" aria-label="Search">
           <Search size={18} />
         </button>
       </header>
@@ -686,20 +720,20 @@ const App: React.FC = () => {
         className={`flex-1 relative z-10 overscroll-behavior-y-contain ${
           activeTab === AppTab.JOURNAL && journalSubTab === 'journal'
             ? 'overflow-hidden'
-            : 'overflow-y-auto no-scrollbar bg-[#fbfbfa]'
+            : 'overflow-y-auto no-scrollbar bg-[#faf9f5]'
         }`}
         style={
           activeTab === AppTab.JOURNAL && journalSubTab !== 'journal'
             ? {
                 backgroundImage: `
-                  repeating-linear-gradient(#fbfbfa, #fbfbfa 31px, #e9e8e6 31px, #e9e8e6 32px)
+                  repeating-linear-gradient(#faf9f5, #faf9f5 31px, #1f1e1d26 31px, #1f1e1d26 32px)
                 `,
                 backgroundSize: '100% 32px',
                 backgroundAttachment: 'local',
                 backgroundPosition: '0 0'
               }
             : activeTab === AppTab.JOURNAL && journalSubTab === 'journal'
-            ? { backgroundColor: '#fbfbfa' }
+            ? { backgroundColor: '#faf9f5' }
             : {}
         }
       >
@@ -724,12 +758,12 @@ const App: React.FC = () => {
             )}
 
             {journalSubTab === 'prayer' && (
-              <div className="px-10 pt-[32px] pb-44 text-[#4a3a33] max-w-2xl">
-                {/* Roman: same font sizes as journal (17px main, 15px secondary) */}
+              <div className="px-10 pt-[32px] pb-44 text-[#141413] max-w-2xl">
+                {/* Roman: same font sizes as journal (18px main, 16px secondary) */}
                 {(() => {
                   const isRoman = currentUser === 'roman';
-                  const prayerMain = isRoman ? 'text-[17px]' : 'text-[15px]';
-                  const prayerSecondary = isRoman ? 'text-[15px]' : 'text-[13px]';
+                  const prayerMain = 'text-[14px]';
+                  const prayerSecondary = 'text-[12px]';
                   
                   // Calculate prayer reminder progress
                   const today = format(new Date(), 'yyyy-MM-dd');
@@ -748,13 +782,13 @@ const App: React.FC = () => {
                     >
                       <div className="flex-1 min-w-0">
                         <p
-                          className={`handwriting ${prayerSecondary} text-[#4a3a33]/45`}
+                          className={`handwriting ${prayerSecondary} text-[#141413]/45`}
                           style={{ height: '32px', lineHeight: '32px', margin: 0, padding: 0, display: 'block' }}
                         >
                           {pr.personName}
                         </p>
                         <p
-                          className={`handwriting text-[#4a3a33] ${prayerMain} opacity-90`}
+                          className={`handwriting text-[#141413] ${prayerMain} opacity-90`}
                           style={{ lineHeight: '32px', margin: 0, padding: 0, display: 'block', minHeight: '32px' }}
                         >
                           {pr.request}
@@ -763,7 +797,7 @@ const App: React.FC = () => {
                       <button
                         type="button"
                         onClick={() => removePrayerRequest(pr)}
-                        className="flex-shrink-0 p-2 text-[#4a3a33]/35 hover:text-[#4a3a33] hover:bg-[#4a3a33]/5 rounded-full transition-colors opacity-50 group-hover:opacity-100 mt-0"
+                        className="flex-shrink-0 p-2 text-[#141413]/35 hover:text-[#141413] hover:bg-[#141413]/5 rounded-full transition-colors opacity-50 group-hover:opacity-100 mt-0"
                         style={{ marginTop: 0 }}
                         aria-label="Remove"
                       >
@@ -778,14 +812,14 @@ const App: React.FC = () => {
                   className="flex items-center justify-between gap-4"
                   style={{ height: '32px', lineHeight: '32px', margin: 0, padding: 0 }}
                 >
-                  <span className="text-[10px] font-bold uppercase tracking-[0.25em] text-[#4a3a33]/45" style={{ lineHeight: '32px' }}>
+                  <span className="text-[10px] font-bold uppercase tracking-[0.25em] text-[#141413]/45" style={{ lineHeight: '32px' }}>
                     Add request
                   </span>
                   <button
                     type="button"
                     onClick={addPrayerRequest}
                     disabled={!newPrayerName.trim() || !newPrayerRequest.trim()}
-                    className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[0.2em] text-[#4a3a33]/70 hover:text-[#4a3a33] disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                    className="flex items-center gap-1.5 text-[16px] font-bold uppercase tracking-[0.2em] text-[#141413]/70 hover:text-[#141413] disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
                     style={{ lineHeight: '32px' }}
                   >
                     <Plus size={14} />
@@ -797,14 +831,14 @@ const App: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => setNewPrayerTerm('short')}
-                    className={`text-[10px] font-bold uppercase tracking-[0.2em] transition-colors ${newPrayerTerm === 'short' ? 'text-[#4a3a33]' : 'text-[#4a3a33]/50 hover:text-[#4a3a33]/70'}`}
+                    className={`text-[16px] font-bold uppercase tracking-[0.2em] transition-colors ${newPrayerTerm === 'short' ? 'text-[#141413]' : 'text-[#141413]/50 hover:text-[#141413]/70'}`}
                   >
                     Short-term
                   </button>
                   <button
                     type="button"
                     onClick={() => setNewPrayerTerm('long')}
-                    className={`text-[10px] font-bold uppercase tracking-[0.2em] transition-colors ${newPrayerTerm === 'long' ? 'text-[#4a3a33]' : 'text-[#4a3a33]/50 hover:text-[#4a3a33]/70'}`}
+                    className={`text-[16px] font-bold uppercase tracking-[0.2em] transition-colors ${newPrayerTerm === 'long' ? 'text-[#141413]' : 'text-[#141413]/50 hover:text-[#141413]/70'}`}
                   >
                     Long-term
                   </button>
@@ -815,7 +849,7 @@ const App: React.FC = () => {
                   placeholder="Name"
                   value={newPrayerName}
                   onChange={(e) => setNewPrayerName(e.target.value)}
-                  className={`w-full bg-transparent border-b border-[#e3e1dc] ${prayerMain} handwriting text-[#4a3a33] placeholder:text-[#4a3a33]/35 focus:outline-none focus:border-[#4a3a33]/40 block`}
+                  className={`w-full bg-transparent border-b border-[#1f1e1d66] ${prayerMain} handwriting text-[#141413] placeholder:text-[#141413]/35 focus:outline-none focus:border-[#141413]/40 block`}
                   style={{ height: '32px', lineHeight: '32px', margin: 0, padding: 0 }}
                 />
                 {/* Rows 3–4: Prayer request textarea — 64px (2 grid lines) */}
@@ -824,7 +858,7 @@ const App: React.FC = () => {
                   value={newPrayerRequest}
                   onChange={(e) => setNewPrayerRequest(e.target.value)}
                   rows={2}
-                  className={`w-full bg-transparent border-b border-[#e3e1dc] ${prayerMain} handwriting text-[#4a3a33] placeholder:text-[#4a3a33]/35 focus:outline-none focus:border-[#4a3a33]/40 resize-none block`}
+                  className={`w-full bg-transparent border-b border-[#1f1e1d66] ${prayerMain} handwriting text-[#141413] placeholder:text-[#141413]/35 focus:outline-none focus:border-[#141413]/40 resize-none block`}
                   style={{ minHeight: '64px', lineHeight: '32px', margin: 0, padding: 0 }}
                 />
                 {/* Spacer — 32px */}
@@ -832,26 +866,26 @@ const App: React.FC = () => {
 
                 {displayedPrayerRequests.length === 0 ? (
                   <p
-                    className={`handwriting text-[#4a3a33]/45 ${prayerMain}`}
+                    className={`handwriting text-[#141413]/45 ${prayerMain}`}
                     style={{ lineHeight: '32px', margin: 0, padding: 0, minHeight: '32px' }}
                   >
                     No prayer requests yet. Add one above or record a journal entry that includes a prayer request.
                   </p>
                 ) : (
                   <div>
-                    <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-[#4a3a33]/45" style={{ marginBottom: '12px' }}>
+                    <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-[#141413]/45" style={{ marginBottom: '12px' }}>
                       Short-term
                     </p>
                     {shortTerm.length === 0 ? (
-                      <p className={`handwriting text-[#4a3a33]/40 ${prayerSecondary}`} style={{ marginBottom: '24px' }}>No short-term requests.</p>
+                      <p className={`handwriting text-[#141413]/40 ${prayerSecondary}`} style={{ marginBottom: '24px' }}>No short-term requests.</p>
                     ) : (
                       shortTerm.map(renderPrayerItem)
                     )}
-                    <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-[#4a3a33]/45" style={{ marginTop: '8px', marginBottom: '12px' }}>
+                    <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-[#141413]/45" style={{ marginTop: '8px', marginBottom: '12px' }}>
                       Long-term
                     </p>
                     {longTerm.length === 0 ? (
-                      <p className={`handwriting text-[#4a3a33]/40 ${prayerSecondary}`}>No long-term requests.</p>
+                      <p className={`handwriting text-[#141413]/40 ${prayerSecondary}`}>No long-term requests.</p>
                     ) : (
                       longTerm.map(renderPrayerItem)
                     )}
@@ -864,11 +898,11 @@ const App: React.FC = () => {
             )}
 
             {journalSubTab === 'verse' && (
-              <div className="px-10 pt-[32px] pb-44 text-[#4a3a33] max-w-2xl">
+              <div className="px-10 pt-[32px] pb-44 text-[#141413] max-w-2xl">
                 {(() => {
                   const isRoman = currentUser === 'roman';
-                  const verseMain = isRoman ? 'text-[17px]' : 'text-[15px]';
-                  const verseRef = isRoman ? 'text-[15px]' : 'text-[13px]';
+                  const verseMain = 'text-[14px]';
+                  const verseRef = 'text-[12px]';
                   return (
                     <>
                 <VerseListWithFetch
@@ -895,7 +929,7 @@ const App: React.FC = () => {
             )}
           </div>
         ) : (
-          <div className="px-10 pt-[32px] pb-32 text-[#4a3a33]">
+          <div className="px-10 pt-[32px] pb-32 text-[#141413]">
             {activeTab === AppTab.HEALTH && (
               <div className="animate-in fade-in slide-in-from-right-4 duration-500 max-w-2xl" key={selectedDateStr}>
                 <StressDashboard selectedDateKey={selectedDateStr} onStartMeditation={() => setShowMeditation(true)} />
@@ -917,24 +951,24 @@ const App: React.FC = () => {
             {activeTab === AppTab.DEVOTIONAL && (
               <div className="animate-in fade-in slide-in-from-right-4 duration-500 max-w-2xl">
                 {isLoadingDevo ? (
-                  <div className="flex flex-col items-center justify-center py-24 text-[#4a3a33]/40">
-                    <div className="w-6 h-6 border-2 border-[#e7ded4] border-t-[#4a3a33] rounded-full animate-spin mb-6" />
-                    <p className="text-[9px] font-bold uppercase tracking-[0.2em] animate-pulse">Consulting the Spirit...</p>
+                  <div className="flex flex-col items-center justify-center py-24 text-[#141413]/40">
+                    <div className="w-6 h-6 border-2 border-[#1f1e1d4d] border-t-[#141413] rounded-full animate-spin mb-6" />
+                    <p className="text-[10px] font-bold uppercase tracking-[0.2em] animate-pulse">Consulting the Spirit...</p>
                   </div>
                 ) : displayedDevotional ? (
                   <div className="py-6 flex flex-col gap-5">
                     <div className="text-left space-y-4">
-                      <p className="melrose-text text-[#4a3a33]">
+                      <p className="melrose-text text-[#141413]">
                         "{displayedDevotional.verse}"
                       </p>
-                      <p className="text-[14px] font-bold uppercase tracking-[0.4em] text-[#4a3a33]/45">
+                      <p className="text-[14px] font-bold uppercase tracking-[0.4em] text-[#141413]/45">
                         — {displayedDevotional.reference}
                       </p>
                     </div>
 
                     {displayedDevotional.quote && (
-                      <div className="bg-[#f6f5f3]/50 rounded-2xl p-6 shadow-sm">
-                        <p className="melrose-text text-[#4a3a33] italic">
+                      <div className="bg-[#f5f4ed]/50 rounded-2xl p-6 shadow-sm">
+                        <p className="melrose-text text-[#141413] italic">
                           "{displayedDevotional.quote}"
                         </p>
                       </div>
@@ -957,15 +991,15 @@ const App: React.FC = () => {
                           <button
                             type="button"
                             onClick={() => setShowReader('reflection')}
-                            className="w-full text-left bg-[#f6f5f3]/50 hover:bg-[#f6f5f3]/70 rounded-2xl p-6 shadow-sm transition-all group"
+                            className="w-full text-left bg-[#f5f4ed]/50 hover:bg-[#f5f4ed]/70 rounded-2xl p-6 shadow-sm transition-all group"
                           >
                             <div className="flex items-center justify-between">
-                              <h4 className="text-[14px] font-bold text-[#4a3a33]">
+                              <h4 className="text-[16px] font-bold text-[#141413]">
                                 {displayedDevotional.title ?? 'The Reflection'}
                               </h4>
-                              <ChevronRight size={18} className="text-[#4a3a33]/40 group-hover:text-[#4a3a33] group-hover:translate-x-1 transition-all" />
+                              <ChevronRight size={18} className="text-[#141413]/40 group-hover:text-[#141413] group-hover:translate-x-1 transition-all" />
                             </div>
-                            <p className="melrose-text text-[#4a3a33]/60 mt-3 line-clamp-2">
+                            <p className="melrose-text text-[#141413]/60 mt-3 line-clamp-2">
                               {displayedDevotional.reflection.split('\n\n')[0]}
                             </p>
                           </button>
@@ -975,15 +1009,15 @@ const App: React.FC = () => {
                           <button
                             type="button"
                             onClick={() => setShowReader('prayer')}
-                            className="w-full text-left bg-[#f6f5f3]/50 hover:bg-[#f6f5f3]/70 rounded-2xl p-6 shadow-sm transition-all group"
+                            className="w-full text-left bg-[#f5f4ed]/50 hover:bg-[#f5f4ed]/70 rounded-2xl p-6 shadow-sm transition-all group"
                           >
                             <div className="flex items-center justify-between">
-                              <h4 className="text-[14px] font-bold uppercase tracking-widest text-[#4a3a33]">
+                              <h4 className="text-[16px] font-bold uppercase tracking-widest text-[#141413]">
                                 A Simple Prayer
                               </h4>
-                              <ChevronRight size={18} className="text-[#4a3a33]/40 group-hover:text-[#4a3a33] group-hover:translate-x-1 transition-all" />
+                              <ChevronRight size={18} className="text-[#141413]/40 group-hover:text-[#141413] group-hover:translate-x-1 transition-all" />
                             </div>
-                            <p className="melrose-text text-[#4a3a33]/60 mt-3 line-clamp-2">
+                            <p className="melrose-text text-[#141413]/60 mt-3 line-clamp-2">
                               {displayedDevotional.prayer.split('\n\n')[0]}
                             </p>
                           </button>
@@ -993,7 +1027,7 @@ const App: React.FC = () => {
                   </div>
                 ) : (
                   <div className="flex flex-col items-center justify-center py-24 px-6 text-center">
-                    <p className="text-[#4a3a33]/50 font-light text-lg mb-8">
+                    <p className="text-[#141413]/50 font-light text-[16px] mb-8">
                       No devotional for this day yet.
                     </p>
                     <button
@@ -1004,7 +1038,7 @@ const App: React.FC = () => {
                         }
                         setUnlockedDevotionalTick((v) => v + 1);
                       }}
-                      className="px-6 py-3 rounded-xl bg-[#4a3a33]/10 hover:bg-[#4a3a33]/20 text-[#4a3a33] font-medium transition-colors"
+                      className="px-6 py-3 rounded-xl bg-[#141413]/10 hover:bg-[#141413]/20 text-[#141413] text-[16px] font-medium transition-colors"
                     >
                       Unlock daily devotional
                     </button>
@@ -1118,21 +1152,21 @@ const VerseListWithFetch: React.FC<VerseListWithFetchProps> = ({
         return (
           <div key={`${v.reference}-${i}`} className="block group" style={{ marginBottom: '32px' }}>
             <p
-              className={`handwriting text-[#4a3a33] ${verseMain} opacity-90`}
+              className={`handwriting text-[#141413] ${verseMain} opacity-90`}
               style={{ lineHeight: '32px', margin: 0, padding: 0, display: 'block', minHeight: '32px' }}
             >
               {v.verse ? `"${v.verse}"` : isFetching ? 'Loading...' : v.reference}
             </p>
             {v.verse && (
               <p
-                className={`handwriting text-[#4a3a33]/45 ${verseRef}`}
+                className={`handwriting text-[#141413]/45 ${verseRef}`}
                 style={{ lineHeight: '32px', margin: 0, padding: 0, display: 'block', minHeight: '32px' }}
               >
                 — {v.reference}
               </p>
             )}
             <div className="flex items-center gap-2 mt-1" style={{ lineHeight: '24px' }}>
-              <span className="text-[9px] text-[#4a3a33]/40 uppercase tracking-wider">
+              <span className="text-[10px] text-[#141413]/40 uppercase tracking-wider">
                 {sourceLabel}
               </span>
               {sourceEntry && (
@@ -1140,7 +1174,7 @@ const VerseListWithFetch: React.FC<VerseListWithFetchProps> = ({
                   onClick={() => {
                     onNavigateToEntry(sourceEntry);
                   }}
-                  className="text-[10px] text-[#4a3a33]/50 hover:text-[#4a3a33]/70 transition-colors opacity-60 group-hover:opacity-100 cursor-pointer"
+                  className="text-[10px] text-[#141413]/50 hover:text-[#141413]/70 transition-colors opacity-60 group-hover:opacity-100 cursor-pointer"
                 >
                   ← View entry
                 </button>

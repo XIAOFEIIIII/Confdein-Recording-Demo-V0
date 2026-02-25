@@ -205,6 +205,26 @@ const ROMAN_ENTRIES: JournalEntry[] = [
     mood: 'heavy',
     moodLevel: detectMoodFromTimestamp(new Date(2026, 0, 25, 18, 30).getTime()),
   },
+  // 静态示意（2026-01-27）：20:01 处于转写中（Transcribing）
+  {
+    id: 'roman-ring-transcribing-2026-01-27',
+    timestamp: new Date(2026, 0, 27, 20, 1).getTime(),
+    transcript: '',
+    summary: '',
+    keywords: [],
+    moodLevel: detectMoodFromTimestamp(new Date(2026, 0, 27, 20, 1).getTime()),
+    ringStatus: 'transcribing',
+  },
+  // 静态示意（2026-01-27）：同一条录音在 20:10 仍在上传（Transmitting）
+  {
+    id: 'roman-ring-transmitting-2026-01-27',
+    timestamp: new Date(2026, 0, 27, 20, 10).getTime(),
+    transcript: '',
+    summary: '',
+    keywords: [],
+    moodLevel: detectMoodFromTimestamp(new Date(2026, 0, 27, 20, 10).getTime()),
+    ringStatus: 'transmitting',
+  },
   {
     id: 'roman-2',
     timestamp: new Date(2026, 0, 26, 20, 15).getTime(),

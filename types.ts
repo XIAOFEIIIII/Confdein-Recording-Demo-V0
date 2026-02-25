@@ -19,6 +19,8 @@ export interface JournalEntry {
   isPrayerEntry?: boolean;
   /** 关联的提醒时间点 ID（如 'morning', 'evening'） */
   prayerSlotId?: string;
+  /** 可选：用于展示「Transmitting / Transcribing」等戒指同步状态的静态 entry。仅做 UI demo 用。 */
+  ringStatus?: 'transmitting' | 'transcribing';
 }
 
 export interface PrayerRequest {

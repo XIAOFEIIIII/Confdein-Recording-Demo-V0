@@ -73,17 +73,17 @@ const EntryEditor: React.FC<EntryEditorProps> = ({ entry, onSave, onDelete, onCl
   };
 
   return (
-    <div className={`fixed inset-0 z-[200] bg-[#fbfbfa] flex flex-col ${usePatrickHand ? 'handwriting-roman' : ''}`}>
+    <div className={`fixed inset-0 z-[200] bg-[#faf9f5] flex flex-col ${usePatrickHand ? 'handwriting-roman' : ''}`}>
       {/* Header */}
-      <div className="flex items-center justify-between px-6 py-4 border-b border-[#e7ded4]">
-        <h2 className="text-[14px] font-bold uppercase tracking-widest text-[#4a3a33]">
+      <div className="flex items-center justify-between px-6 py-4 border-b border-[#1f1e1d4d]">
+        <h2 className="text-[14px] font-bold uppercase tracking-widest text-[#141413]">
           Edit Entry
         </h2>
         <div className="flex items-center gap-2">
           {onDelete && (
             <button
               onClick={() => setShowDeleteConfirm(true)}
-              className="p-2 text-[#4a3a33]/30 hover:text-red-600 transition-colors"
+              className="p-2 text-[#141413]/30 hover:text-red-600 transition-colors"
               aria-label="Delete"
             >
               <Trash2 size={18} />
@@ -91,14 +91,14 @@ const EntryEditor: React.FC<EntryEditorProps> = ({ entry, onSave, onDelete, onCl
           )}
           <button
             onClick={handleSave}
-            className="p-2 text-[#4a3a33]/50 hover:text-[#4a3a33] transition-colors"
+            className="p-2 text-[#141413]/50 hover:text-[#141413] transition-colors"
             aria-label="Save"
           >
             <Save size={18} />
           </button>
           <button
             onClick={onClose}
-            className="p-2 text-[#4a3a33]/20 hover:text-[#4a3a33]/40 transition-colors"
+            className="p-2 text-[#141413]/20 hover:text-[#141413]/40 transition-colors"
             aria-label="Close"
           >
             <X size={18} />
@@ -109,20 +109,20 @@ const EntryEditor: React.FC<EntryEditorProps> = ({ entry, onSave, onDelete, onCl
       {/* Delete Confirmation */}
       {showDeleteConfirm && (
         <div className="absolute inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center z-10 px-6">
-          <div className="bg-[#fbfbfa] rounded-2xl p-6 max-w-sm w-full shadow-lg">
-            <p className="text-[#4a3a33] text-[15px] mb-4">
+          <div className="bg-[#faf9f5] rounded-2xl p-6 max-w-sm w-full shadow-lg">
+            <p className="text-[#141413] text-[16px] mb-4">
               Are you sure you want to delete this entry? This cannot be undone.
             </p>
             <div className="flex gap-3">
               <button
                 onClick={handleDelete}
-                className="flex-1 px-4 py-2 bg-red-600 text-white rounded-xl text-[13px] font-semibold hover:bg-red-700 transition-colors"
+                className="flex-1 px-4 py-2 bg-red-600 text-white rounded-xl text-[16px] font-semibold hover:bg-red-700 transition-colors"
               >
                 Delete
               </button>
               <button
                 onClick={() => setShowDeleteConfirm(false)}
-                className="flex-1 px-4 py-2 bg-[#f6f5f3] text-[#4a3a33] rounded-xl text-[13px] font-semibold hover:bg-[#f0efed] transition-colors"
+                className="flex-1 px-4 py-2 bg-[#f5f4ed] text-[#141413] rounded-xl text-[16px] font-semibold hover:bg-[#ffffff] transition-colors"
               >
                 Cancel
               </button>
@@ -136,23 +136,23 @@ const EntryEditor: React.FC<EntryEditorProps> = ({ entry, onSave, onDelete, onCl
         <div className="max-w-2xl mx-auto space-y-6">
           {/* Combined Content: transcript, scripture, tags all in one */}
           <div>
-            <label className="block text-[14px] font-bold uppercase tracking-widest text-[#4a3a33] mb-3">
+            <label className="block text-[14px] font-bold uppercase tracking-widest text-[#141413] mb-3">
               Content
             </label>
             <textarea
               value={content}
               onChange={(e) => setContent(e.target.value)}
-              className="w-full min-h-[400px] bg-transparent border-b border-[#e7ded4] handwriting text-[#4a3a33] text-[15px] leading-relaxed resize-none focus:outline-none focus:border-[#4a3a33]/40"
+              className="w-full min-h-[400px] bg-transparent border-b border-[#1f1e1d4d] handwriting text-[#141413] text-[14px] leading-relaxed resize-none focus:outline-none focus:border-[#141413]/40"
               placeholder="Write your thoughts...&#10;&#10;You can add scripture references (e.g. Lev 19:32) and tags (Tags: dream, sermon notes) on separate lines."
             />
-            <p className="text-[11px] text-[#4a3a33]/40 mt-2">
+            <p className="text-[12px] text-[#141413]/40 mt-2">
               Tip: Add scripture on a new line, and tags with "Tags: " prefix
             </p>
           </div>
 
           {/* Mood Level */}
           <div>
-            <label className="block text-[14px] font-bold uppercase tracking-widest text-[#4a3a33] mb-3">
+            <label className="block text-[14px] font-bold uppercase tracking-widest text-[#141413] mb-3">
               How are you feeling?
             </label>
             <div className="flex items-center justify-between gap-2">
@@ -163,16 +163,16 @@ const EntryEditor: React.FC<EntryEditorProps> = ({ entry, onSave, onDelete, onCl
                   onClick={() => setMoodLevel(level)}
                   className={`flex-1 aspect-square rounded-full border-2 transition-all flex items-center justify-center ${
                     moodLevel === level
-                      ? 'border-[#4a3a33] bg-[#4a3a33]/5'
-                      : 'border-[#e7ded4] bg-white hover:border-[#4a3a33]/30'
+                      ? 'border-[#141413] bg-[#141413]/5'
+                      : 'border-[#1f1e1d4d] bg-white hover:border-[#141413]/30'
                   }`}
                   style={{ minWidth: '48px', minHeight: '48px' }}
                 >
-                  <span className="text-xl font-mono text-[#4a3a33]">{moodEmojis[level]}</span>
+                  <span className="text-[16px] font-mono text-[#141413]">{moodEmojis[level]}</span>
                 </button>
               ))}
             </div>
-            <p className="text-[11px] text-[#4a3a33]/50 mt-2 text-center">
+            <p className="text-[12px] text-[#141413]/50 mt-2 text-center">
               {moodLevel === 1 ? 'Terrible' : moodLevel === 2 ? 'Bad' : moodLevel === 3 ? 'Okay' : moodLevel === 4 ? 'Good' : 'Great'}
             </p>
           </div>
