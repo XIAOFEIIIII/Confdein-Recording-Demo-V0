@@ -149,7 +149,7 @@ const Navigation: React.FC<NavigationProps> = ({
 
       {/* Bottom tab bar + separate record button (like previous design) */}
       <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 flex items-center gap-3">
-        <nav className="flex items-center h-14 bg-[#f5f4ed]/95 backdrop-blur-xl rounded-full px-2 shadow-[0_18px_40px_rgba(0,0,0,0.08)]">
+        <nav className="flex items-center h-12 bg-[#f5f4ed]/95 backdrop-blur-xl rounded-full px-1.5 shadow-[0_18px_40px_rgba(0,0,0,0.08)]">
           {[
             { id: AppTab.JOURNAL, icon: BookOpen, label: 'Journal' },
             { id: AppTab.HEALTH, icon: Activity, label: 'Stress' },
@@ -160,7 +160,7 @@ const Navigation: React.FC<NavigationProps> = ({
                 <button
                   key={item.id}
                   onClick={() => setActiveTab(item.id)}
-                  className={`relative flex flex-col items-center justify-center gap-1 px-6 h-11 rounded-full text-[11px] transition-all ${
+                  className={`relative flex flex-col items-center justify-center gap-0.5 px-4 h-10 rounded-full text-[10px] transition-all ${
                     isActive
                       ? 'bg-[#faf9f5] text-[#141413] shadow-[0_8px_20px_rgba(0,0,0,0.08)]'
                       : 'text-[#141413]/70 hover:text-[#141413]'
